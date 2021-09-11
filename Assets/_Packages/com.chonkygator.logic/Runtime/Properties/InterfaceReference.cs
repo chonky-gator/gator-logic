@@ -5,7 +5,9 @@ using UnityEngine;
 namespace GatOR.Logic.Properties
 {
     [Serializable]
-    public class InterfaceReference<TInterface, TObject> : ISerializationCallbackReceiver, IEquatable<TObject> where TObject : UnityEngine.Object
+    public class InterfaceReference<TInterface, TObject> :
+        ISerializationCallbackReceiver,
+        IEquatable<TObject> where TObject : UnityEngine.Object
     {
         internal const string ReferencePropName = nameof(m_object);
 

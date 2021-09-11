@@ -6,5 +6,6 @@ namespace GatOR.Logic.Properties
     public struct ReferenceOf<T>
     {
         [SerializeReference] internal T reference;
+        public T Reference => reference;
     }
 }
