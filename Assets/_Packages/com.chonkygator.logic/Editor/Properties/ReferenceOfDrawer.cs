@@ -38,7 +38,7 @@ namespace GatOR.Logic.Editor.Properties
             Type[] inheritingTypes = AppDomain.CurrentDomain
                 .GetAssemblies()
                 .SelectMany(a => a.GetTypes())
-                .Where(t => !t.IsAbstract && type.IsAssignableFrom(t))
+                .Where(t => !t.IsAbstract && type.IsAssignableFrom(t) && !typeof(UnityEngine.Object).IsAssignableFrom(t))
                 .ToArray();
             string[] typeNames = defaultOptions
                 .Select(option => option.Name)

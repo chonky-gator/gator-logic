@@ -4,8 +4,15 @@ using UnityEngine;
 
 namespace GatOR.Logic.Properties
 {
+    public interface IUnityObjectInterfaceReference<TInterface, TObject>
+    {
+        public TInterface Interface { get; set; }
+        public TObject Object { get; }
+    }
+
     [Serializable]
     public class InterfaceReference<TInterface, TObject> :
+        IUnityObjectInterfaceReference<TInterface, TObject>,
         ISerializationCallbackReceiver,
         IEquatable<TObject> where TObject : UnityEngine.Object
     {

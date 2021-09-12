@@ -32,9 +32,13 @@ namespace GatOR.Logic.Editor.Properties
                 richText = true,
             };
 
-            (Type interfaceType, Type objectType) = GetObjectReferenceType(fieldInfo);
-
-            var referenceProp = GetReferenceProperty(property);
+            (Type interfaceType, Type objectType) = property.propertyType switch
+            {
+                SerializedPropertyType.Generic => GetObjectReferenceType(fieldInfo),
+                SerializedPropertyType.ManagedReference => GetObjectReferenceTypeManagedReference(property),
+                _ => throw new NotImplementedException(property.propertyType.ToString()),
+            };
+            SerializedProperty referenceProp = GetReferenceProperty(property);
             // string colorCode = EditorGUIUtility.isProSkin ? "#aaaaaa" : "#888888";
             label.text += $" <color=#888888><interface {interfaceType.Name}></color>";
             // Tried to assign interfaceType too, but it won't search the component either when dragging a gameObject
@@ -107,6 +111,14 @@ namespace GatOR.Logic.Editor.Properties
             return (GetPropertyType(InterfacePropName), GetPropertyType(ObjectPropName));
 
             Type GetPropertyType(string name) => individualType.GetProperty(name).PropertyType;
+        }
+
+        public static (Type interfaceType, Type objectType) GetObjectReferenceTypeManagedReference(SerializedProperty property)
+        {
+            Type type = EditorUtils.GetTypeWithFullName(property.managedReferenceFullTypename);
+            Type interfaceDefinitionType = type.GetInterface(typeof(IUnityObjectInterfaceReference<,>).Name);
+            Type[] genericArguments = interfaceDefinitionType.GetGenericArguments();
+            return (genericArguments[0], genericArguments[1]);
         }
 
         public static bool TryGetInterface(Object obj, Type interfaceType, out Object objectWithInterface)
