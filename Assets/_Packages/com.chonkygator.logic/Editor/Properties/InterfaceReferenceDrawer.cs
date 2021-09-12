@@ -32,14 +32,18 @@ namespace GatOR.Logic.Editor.Properties
                 richText = true,
             };
 
-            (Type interfaceType, Type objectType) = property.propertyType switch
+            // Determine the field type and get the interface to determine the generic arguments
+            Type fieldType = property.propertyType switch
             {
-                SerializedPropertyType.Generic => GetObjectReferenceType(fieldInfo),
-                SerializedPropertyType.ManagedReference => GetObjectReferenceTypeManagedReference(property),
+                SerializedPropertyType.Generic => EditorUtils.GetIndividualType(fieldInfo),
+                SerializedPropertyType.ManagedReference => EditorUtils.GetTypeWithFullName(property.managedReferenceFullTypename),
                 _ => throw new NotImplementedException(property.propertyType.ToString()),
             };
+            Type interfaceDefinitionType = fieldType.GetInterface(typeof(IUnityObjectInterfaceReference<,>).Name);
+            Type[] genericArguments = interfaceDefinitionType.GetGenericArguments();
+            Type interfaceType = genericArguments[0], objectType = genericArguments[1];
+
             SerializedProperty referenceProp = GetReferenceProperty(property);
-            // string colorCode = EditorGUIUtility.isProSkin ? "#aaaaaa" : "#888888";
             label.text += $" <color=#888888><interface {interfaceType.Name}></color>";
             // Tried to assign interfaceType too, but it won't search the component either when dragging a gameObject
             // TODO: Research if we can do this with VisualElements
@@ -103,23 +107,6 @@ namespace GatOR.Logic.Editor.Properties
         public static SerializedProperty GetReferenceProperty(SerializedProperty objectProperty) =>
             objectProperty.FindPropertyRelative(InterfaceReference<object, Object>.ReferencePropName);
 
-
-        public static (Type interfaceType, Type objectType) GetObjectReferenceType(FieldInfo fieldInfo)
-        {
-            Type individualType = EditorUtils.GetIndividualType(fieldInfo);
-            // GetPropertyType uses individual type field
-            return (GetPropertyType(InterfacePropName), GetPropertyType(ObjectPropName));
-
-            Type GetPropertyType(string name) => individualType.GetProperty(name).PropertyType;
-        }
-
-        public static (Type interfaceType, Type objectType) GetObjectReferenceTypeManagedReference(SerializedProperty property)
-        {
-            Type type = EditorUtils.GetTypeWithFullName(property.managedReferenceFullTypename);
-            Type interfaceDefinitionType = type.GetInterface(typeof(IUnityObjectInterfaceReference<,>).Name);
-            Type[] genericArguments = interfaceDefinitionType.GetGenericArguments();
-            return (genericArguments[0], genericArguments[1]);
-        }
 
         public static bool TryGetInterface(Object obj, Type interfaceType, out Object objectWithInterface)
         {
