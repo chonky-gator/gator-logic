@@ -13,7 +13,7 @@ namespace GatOR.Logic.Editor.Properties
         private struct Cache
         {
             public Type[] inheritingTypes;
-            public string[] typeNames;
+            public GUIContent[] typeNames;
         }
 
         private static readonly Dictionary<Type, Cache> infoForTypes = new Dictionary<Type, Cache>();
@@ -40,17 +40,17 @@ namespace GatOR.Logic.Editor.Properties
                 .SelectMany(a => a.GetTypes())
                 .Where(t => !t.IsAbstract && type.IsAssignableFrom(t) && !typeof(UnityEngine.Object).IsAssignableFrom(t))
                 .ToArray();
-            string[] typeNames = defaultOptions
+            GUIContent[] typeNames = defaultOptions
                 .Select(option => option.Name)
-                .Concat(inheritingTypes.Select(t => t.Name))
+                .Concat(inheritingTypes.Select(t => new GUIContent(t.Name)))
                 .ToArray();
             var uniqueNameChecker = new HashSet<string>();
-            foreach (string name in typeNames)
+            foreach (GUIContent name in typeNames)
             {
-                if (uniqueNameChecker.Contains(name))
+                if (uniqueNameChecker.Contains(name.text))
                     throw new Exception($"Name \"{name}\" already exists.");
 
-                uniqueNameChecker.Add(name);
+                uniqueNameChecker.Add(name.text);
             }
 
             Cache newCache = new Cache
@@ -81,10 +81,17 @@ namespace GatOR.Logic.Editor.Properties
 
             var info = GetOrCreateInfoForType(referenceType);
             Type[] inheritingTypes = info.inheritingTypes;
-            string[] typeNames = info.typeNames;
+            GUIContent[] typeNames = info.typeNames;
 
             int previousSelectedTypeIndex = GetSelectedIndex(currentReferenceType, inheritingTypes);
-            int currentSelectedTypeIndex = EditorGUI.IntPopup(position, label.text, previousSelectedTypeIndex, typeNames, null);
+            label.text += $" <color=#888888><{referenceType.Name}> type</color>";
+
+            Rect labelPosition = position;
+            labelPosition.width *= 0.5f;
+            EditorGUI.LabelField(labelPosition, label, GUIStyles.RichTextLabelStyle);
+
+            labelPosition.x += labelPosition.width;
+            int currentSelectedTypeIndex = EditorGUI.IntPopup(labelPosition, null, previousSelectedTypeIndex, typeNames, null);
             if (currentSelectedTypeIndex != previousSelectedTypeIndex)
                 reference.managedReferenceValue = SetType(currentSelectedTypeIndex, referenceType, inheritingTypes);
 

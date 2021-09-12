@@ -17,21 +17,15 @@ namespace GatOR.Logic.Editor.Properties
         public const string ObjectPropName = nameof(InterfaceReference<object, Object>.Object);
 
         private float baseHeight;
-        private GUIStyle labelStyle;
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
             baseHeight = base.GetPropertyHeight(property, label);
-            return baseHeight * 2;
+            return baseHeight;
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            labelStyle ??= labelStyle = new GUIStyle(EditorStyles.label)
-            {
-                richText = true,
-            };
-
             // Determine the field type and get the interface to determine the generic arguments
             Type fieldType = property.propertyType switch
             {
@@ -44,13 +38,12 @@ namespace GatOR.Logic.Editor.Properties
             Type interfaceType = genericArguments[0], objectType = genericArguments[1];
 
             SerializedProperty referenceProp = GetReferenceProperty(property);
-            label.text += $" <color=#888888><interface {interfaceType.Name}></color>";
+            label.text += $" <color=#888888><{interfaceType.Name}></color>";
             // Tried to assign interfaceType too, but it won't search the component either when dragging a gameObject
             // TODO: Research if we can do this with VisualElements
 
             position.height = baseHeight;
-            EditorGUI.LabelField(position, label, labelStyle);
-            position.y += baseHeight;
+            EditorGUI.LabelField(position, label, GUIStyles.RichTextLabelStyle);
             var newReference = EditorGUI.ObjectField(position, default(string), referenceProp.objectReferenceValue, objectType, true);
 
             SetProperty(property, interfaceType, newReference);
