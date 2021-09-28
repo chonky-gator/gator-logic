@@ -18,6 +18,7 @@ namespace GatOR.Logic.Editor.Properties
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
             var nameProperty = property.FindPropertyRelative(nameof(AnimatorID.name));
+            label.text += $" (Hash: {Animator.StringToHash(nameProperty.stringValue)})";
             EditorGUI.PropertyField(position, nameProperty, label);
         }
     }
