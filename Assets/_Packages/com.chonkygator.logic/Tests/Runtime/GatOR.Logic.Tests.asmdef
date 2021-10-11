@@ -1,6 +1,6 @@
 {
     "name": "GatOR.Logic.Tests",
-    "rootNamespace": "",
+    "rootNamespace": "GatOR.Logic.Tests",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
