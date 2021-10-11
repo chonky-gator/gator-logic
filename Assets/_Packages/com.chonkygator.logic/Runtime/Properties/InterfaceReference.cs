@@ -55,10 +55,10 @@ namespace GatOR.Logic.Properties
 
         public override int GetHashCode()
         {
-            if (!Object)
+            if (Interface == null)
                 return 0;
 
-            return Object.GetHashCode();
+            return Interface.GetHashCode();
         }
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
