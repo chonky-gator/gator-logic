@@ -3,7 +3,8 @@
     "rootNamespace": "GatOR.Logic.Tests",
     "references": [
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "GatOR.Logic"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
