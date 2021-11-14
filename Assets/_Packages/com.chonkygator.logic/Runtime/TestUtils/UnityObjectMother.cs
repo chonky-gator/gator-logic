@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace GatOR.Logic.Tests
+namespace GatOR.Logic.TestsUtils
 {
     public class UnityObjectMother
     {
