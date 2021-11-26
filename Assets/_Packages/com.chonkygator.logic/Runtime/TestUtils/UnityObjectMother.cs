@@ -56,5 +56,8 @@ namespace GatOR.Logic.TestsUtils
             instantiatedObjects.Add(instance);
             return instance;
         }
+
+
+        public static ReflectionBuilder<T> AReflectionBuilder<T>() => new ReflectionBuilder<T>();
     }
 }
