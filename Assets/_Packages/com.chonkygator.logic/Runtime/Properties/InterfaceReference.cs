@@ -1,12 +1,14 @@
 using System;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 
 namespace GatOR.Logic.Properties
 {
-    public interface IUnityObjectInterfaceReference<TInterface, TObject>
+    public interface IUnityObjectInterfaceReference<TInterface, TObject> : IReference<TInterface>
+        where TInterface : class
+        where TObject : Object
     {
-        public TInterface Interface { get; set; }
         public TObject Object { get; }
     }
 
@@ -14,7 +16,9 @@ namespace GatOR.Logic.Properties
     public class InterfaceReference<TInterface, TObject> :
         IUnityObjectInterfaceReference<TInterface, TObject>,
         ISerializationCallbackReceiver,
-        IEquatable<TObject> where TObject : UnityEngine.Object
+        IEquatable<TObject>
+        where TInterface : class
+        where TObject : Object
     {
         internal const string ReferencePropName = nameof(m_object);
 
@@ -78,12 +82,14 @@ namespace GatOR.Logic.Properties
     }
 
     [Serializable]
-    public class InterfaceReference<TInterface> : InterfaceReference<TInterface, UnityEngine.Object>
+    public class InterfaceReference<TInterface> : InterfaceReference<TInterface, Object>
+        where TInterface : class
     {
     }
 
     [Serializable]
     public class InterfaceComponent<TInterface> : InterfaceReference<TInterface, Component>
+        where TInterface : class
     {
     }
 }

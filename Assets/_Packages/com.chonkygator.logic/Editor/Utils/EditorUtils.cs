@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace GatOR.Logic.Editor
 {
     public static class EditorUtils
     {
-        private static readonly char[] assemblySeparator = new char[] { ' ' };
+        private static readonly Regex AssemblyRegex = new Regex(@"([^\s]*)\s(.*)", RegexOptions.Compiled);
 
         /// <summary>
         /// Gets the list or array type, or the same type.
@@ -39,18 +40,18 @@ namespace GatOR.Logic.Editor
             if (string.IsNullOrEmpty(name))
                 return null;
 
-            string[] split = name.Split(assemblySeparator, 2);
-            string assemblyName = split[0], typeName = split[1];
+            var match = AssemblyRegex.Match(name);
+            string assemblyName = match.Groups[1].Value, typeName = match.Groups[2].Value;
 
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
             var assembly = assemblies.First(IsAssemblyWithName);
             var type = assembly.GetType(typeName);
             return type;
 
-            bool IsAssemblyWithName(Assembly assembly)
+            bool IsAssemblyWithName(Assembly targetAssembly)
             {
-                var name = assembly.GetName();
-                return name.Name == assemblyName;
+                var nameInfo = targetAssembly.GetName();
+                return nameInfo.Name == assemblyName;
             }
         }
     }

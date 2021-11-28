@@ -16,20 +16,24 @@ namespace GatOR.Logic.Editor.Properties
             public GUIContent[] typeNames;
         }
 
-        private static readonly Dictionary<Type, Cache> infoForTypes = new Dictionary<Type, Cache>();
+        private static readonly Dictionary<Type, Cache> InfoForTypes = new Dictionary<Type, Cache>();
 
         // This is to add custom options, not used at the moment
-        private static readonly List<CustomReferenceOf> defaultOptions = new List<CustomReferenceOf>()
+        private static readonly List<ICustomReferenceOf> CustomOptions = new List<ICustomReferenceOf>()
         {
             new NullCustomReferenceOf(),
+            new UnityObjectCustomReferenceOf(),
         };
 
-        public static float baseHeight;
-        public static float referenceHeight;
+        private static float _baseHeight;
+
+        private int selectedPropertyDrawerIndex = -1;
+        private ICustomReferenceOf SelectedPropertyDrawer => (selectedPropertyDrawerIndex >= 0)
+            ? CustomOptions[selectedPropertyDrawerIndex] : null;
 
         private static Cache GetOrCreateInfoForType(Type type)
         {
-            if (infoForTypes.TryGetValue(type, out Cache cache))
+            if (InfoForTypes.TryGetValue(type, out Cache cache))
             {
                 // Debug.Log($"Got cache for type: {type}");
                 return cache;
@@ -40,7 +44,7 @@ namespace GatOR.Logic.Editor.Properties
                 .SelectMany(a => a.GetTypes())
                 .Where(t => !t.IsAbstract && type.IsAssignableFrom(t) && !typeof(UnityEngine.Object).IsAssignableFrom(t))
                 .ToArray();
-            GUIContent[] typeNames = defaultOptions
+            GUIContent[] typeNames = CustomOptions
                 .Select(option => option.Name)
                 .Concat(inheritingTypes.Select(t => new GUIContent(t.Name)))
                 .ToArray();
@@ -48,44 +52,46 @@ namespace GatOR.Logic.Editor.Properties
             foreach (GUIContent name in typeNames)
             {
                 if (uniqueNameChecker.Contains(name.text))
-                    throw new Exception($"Name \"{name}\" already exists.");
+                    throw new Exception($"Name \"{name.text}\" already exists.");
 
                 uniqueNameChecker.Add(name.text);
             }
 
-            Cache newCache = new Cache
+            var newCache = new Cache
             {
                 inheritingTypes = inheritingTypes,
                 typeNames = typeNames,
             };
-            infoForTypes[type] = newCache;
+            InfoForTypes[type] = newCache;
             return newCache;
         }
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            baseHeight = base.GetPropertyHeight(property, label);
-            var reference = property.FindPropertyRelative(nameof(ReferenceOf<object>.reference));
-            referenceHeight = string.IsNullOrEmpty(reference.managedReferenceFullTypename) ? 0f
-                : EditorGUI.GetPropertyHeight(reference, label);
-            return baseHeight + referenceHeight;
+            var referenceProperty = property.FindPropertyRelative(nameof(ReferenceOf<object>.serializedReference));
+            var referenceType = EditorUtils.GetTypeWithFullName(referenceProperty.managedReferenceFieldTypename);
+            selectedPropertyDrawerIndex = CustomOptions.FindIndex(x => x.IsSelected(property, referenceType));
+            
+            _baseHeight = base.GetPropertyHeight(property, label);
+            var referenceHeight = SelectedPropertyDrawer?.GetHeight(property) ?? EditorGUI.GetPropertyHeight(referenceProperty, label);
+            return _baseHeight + referenceHeight;
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            position.height = baseHeight;
-            SerializedProperty reference = property.FindPropertyRelative(nameof(ReferenceOf<object>.reference));
+            using var referenceProperty = property.FindPropertyRelative(nameof(ReferenceOf<object>.serializedReference));
 
-            Type currentReferenceType = EditorUtils.GetTypeWithFullName(reference.managedReferenceFullTypename);
-            Type referenceType = EditorUtils.GetTypeWithFullName(reference.managedReferenceFieldTypename);
+            Type currentReferenceType = EditorUtils.GetTypeWithFullName(referenceProperty.managedReferenceFullTypename);
+            Type referenceType = EditorUtils.GetTypeWithFullName(referenceProperty.managedReferenceFieldTypename);
 
             var info = GetOrCreateInfoForType(referenceType);
             Type[] inheritingTypes = info.inheritingTypes;
             GUIContent[] typeNames = info.typeNames;
 
-            int previousSelectedTypeIndex = GetSelectedIndex(currentReferenceType, inheritingTypes);
+            int previousSelectedTypeIndex = GetSelectedIndex();
             label.text += $" <color=#888888><{referenceType.Name}> type</color>";
 
+            position.height = _baseHeight;
             Rect labelPosition = position;
             labelPosition.width *= 0.5f;
             EditorGUI.LabelField(labelPosition, label, GUIStyles.RichTextLabelStyle);
@@ -93,33 +99,39 @@ namespace GatOR.Logic.Editor.Properties
             labelPosition.x += labelPosition.width;
             int currentSelectedTypeIndex = EditorGUI.IntPopup(labelPosition, null, previousSelectedTypeIndex, typeNames, null);
             if (currentSelectedTypeIndex != previousSelectedTypeIndex)
-                reference.managedReferenceValue = SetType(currentSelectedTypeIndex, referenceType, inheritingTypes);
+                SetType(currentSelectedTypeIndex);
 
-            if (currentReferenceType != null)
+            EditorGUI.indentLevel++;
+            position.y += position.height;
+            if (SelectedPropertyDrawer == null)
+                EditorGUI.PropertyField(position, referenceProperty, true);
+            else
+                SelectedPropertyDrawer.OnDraw(property, position, referenceType);
+            EditorGUI.indentLevel--;
+
+            int GetSelectedIndex()
             {
-                EditorGUI.indentLevel++;
-                position.y += position.height;
-                EditorGUI.PropertyField(position, reference, true);
-                EditorGUI.indentLevel--;
+                if (selectedPropertyDrawerIndex >= 0)
+                    return selectedPropertyDrawerIndex;
+                
+                return Array.IndexOf(inheritingTypes, currentReferenceType) + CustomOptions.Count;
             }
 
-            static int GetSelectedIndex(Type currentType, Type[] inheritingTypes)
+            void SetType(int index)
             {
-                for (int i = 0; i < defaultOptions.Count; i++)
+                if (index < CustomOptions.Count)
                 {
-                    if (defaultOptions[i].IsType(currentType))
-                        return i;
+                    CustomOptions[index].Select(property);
+                    return;
                 }
-                return Array.IndexOf(inheritingTypes, currentType) + defaultOptions.Count;
-            }
-
-            static object SetType(int index, Type fieldType, Type[] types)
-            {
-                if (index < defaultOptions.Count)
-                    return defaultOptions[index].CreateInstrance(fieldType);
-
-                Type newType = types[index - defaultOptions.Count];
-                return Activator.CreateInstance(newType);
+                var newType = inheritingTypes[index - CustomOptions.Count];
+                referenceProperty.managedReferenceValue = Activator.CreateInstance(newType);
+                
+                using var typeReference = property.FindPropertyRelative(nameof(ReferenceOf<object>.type));
+                typeReference.enumValueIndex = (int)ReferenceOfType.SerializedReference;
+                
+                using var unityObjectReference = property.FindPropertyRelative(nameof(ReferenceOf<object>.unityObject));
+                unityObjectReference.objectReferenceValue = null;
             }
         }
     }
