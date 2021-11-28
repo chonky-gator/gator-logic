@@ -12,6 +12,7 @@ namespace GatOR.Logic.Properties
         public TObject Object { get; }
     }
 
+    [Obsolete("Use ReferenceOf<T> instead")]
     [Serializable]
     public class InterfaceReference<TInterface, TObject> :
         IUnityObjectInterfaceReference<TInterface, TObject>,
@@ -81,12 +82,14 @@ namespace GatOR.Logic.Properties
         public static implicit operator TObject(InterfaceReference<TInterface, TObject> reference) => reference.Object;
     }
 
+    [Obsolete("Use ReferenceOf<T> instead")]
     [Serializable]
     public class InterfaceReference<TInterface> : InterfaceReference<TInterface, Object>
         where TInterface : class
     {
     }
-
+    
+    [Obsolete("Use ReferenceOf<T> instead")]
     [Serializable]
     public class InterfaceComponent<TInterface> : InterfaceReference<TInterface, Component>
         where TInterface : class

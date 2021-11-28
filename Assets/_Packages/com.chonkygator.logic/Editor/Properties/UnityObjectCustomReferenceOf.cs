@@ -25,7 +25,7 @@ namespace GatOR.Logic.Editor.Properties
         public override void OnDraw(SerializedProperty baseProperty, Rect position, Type expectedType)
         {
             using var unityObjectProperty = baseProperty.FindPropertyRelative(ReferenceOf.NameOfUnityObject);
-            EditorGUI.PropertyField(position, unityObjectProperty);
+            ObjectInterfaceField.DrawIMGUI(position, unityObjectProperty, expectedType);
         }
 
         public override VisualElement CreateVisualElement(SerializedProperty baseProperty, Type expectedType)

@@ -32,13 +32,14 @@ namespace GatOR.Logic.Properties
         [SerializeField] internal Object unityObject;
         [SerializeReference] internal TReference serializedReference;
 
+        private TReference _cachedReference;
         public TReference Reference
         {
             get => type switch
             {
                 ReferenceOfType.Null => null,
                 ReferenceOfType.SerializedReference => serializedReference,
-                ReferenceOfType.UnityObject => serializedReference ??= unityObject as TReference,
+                ReferenceOfType.UnityObject => _cachedReference ??= unityObject as TReference,
                 _ => throw new ArgumentOutOfRangeException(),
             };
             set
