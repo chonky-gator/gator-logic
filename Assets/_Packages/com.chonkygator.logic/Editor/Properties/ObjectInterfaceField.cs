@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEditor.UIElements;
@@ -10,10 +11,15 @@ using Object = UnityEngine.Object;
 
 namespace GatOR.Logic.Editor.Properties
 {
-    public class ObjectInterfaceField : BaseField<Object>
+    public class ObjectInterfaceField : ObjectField
     {
-        public ObjectInterfaceField(string label) : base(label, null)
+        private readonly Type interfaceType;
+        
+        public ObjectInterfaceField(Type interfaceType, string label) : base(label)
         {
+            this.interfaceType = interfaceType;
+            var fieldLabel = this.Q<Label>(className: "unity-object-field-display__label");
+            fieldLabel.text = $"Test ({interfaceType.Name})";
         }
 
         public static void DrawIMGUI(Rect position, SerializedProperty objectProperty, Type expectedType,
@@ -24,7 +30,7 @@ namespace GatOR.Logic.Editor.Properties
             var selectedObject = EditorGUI.ObjectField(position, objectProperty.objectReferenceValue,
                 unityObjectType, objectProperty.serializedObject.targetObject);
             selectedObject = TryReadComponentFromGameObject(selectedObject, expectedType);
-            if (selectedObject && !expectedType.IsAssignableFrom(selectedObject.GetType()))
+            if (selectedObject && !expectedType.IsInstanceOfType(selectedObject))
                 throw new InvalidCastException($"Selected object ({selectedObject.GetType()}) is not of type: {expectedType}");
             
             objectProperty.objectReferenceValue = selectedObject;

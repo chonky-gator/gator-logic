@@ -18,7 +18,6 @@ namespace GatOR.Logic.Editor.Properties
 
         private static readonly Dictionary<Type, Cache> InfoForTypes = new Dictionary<Type, Cache>();
 
-        // This is to add custom options, not used at the moment
         private static readonly List<ICustomReferenceOf> CustomOptions = new List<ICustomReferenceOf>()
         {
             new NullCustomReferenceOf(),
@@ -27,9 +26,9 @@ namespace GatOR.Logic.Editor.Properties
 
         private static float _baseHeight;
 
-        private int selectedPropertyDrawerIndex = -1;
-        private ICustomReferenceOf SelectedPropertyDrawer => (selectedPropertyDrawerIndex >= 0)
-            ? CustomOptions[selectedPropertyDrawerIndex] : null;
+        private int _selectedPropertyDrawerIndex = -1;
+        private ICustomReferenceOf SelectedPropertyDrawer => (_selectedPropertyDrawerIndex >= 0)
+            ? CustomOptions[_selectedPropertyDrawerIndex] : null;
 
         private static Cache GetOrCreateInfoForType(Type type)
         {
@@ -70,7 +69,7 @@ namespace GatOR.Logic.Editor.Properties
         {
             var referenceProperty = property.FindPropertyRelative(nameof(ReferenceOf<object>.serializedReference));
             var referenceType = EditorUtils.GetTypeWithFullName(referenceProperty.managedReferenceFieldTypename);
-            selectedPropertyDrawerIndex = CustomOptions.FindIndex(x => x.IsSelected(property, referenceType));
+            _selectedPropertyDrawerIndex = CustomOptions.FindIndex(x => x.IsSelected(property, referenceType));
             
             _baseHeight = base.GetPropertyHeight(property, label);
             var referenceHeight = SelectedPropertyDrawer?.GetHeight(property) ?? EditorGUI.GetPropertyHeight(referenceProperty, label);
@@ -111,8 +110,8 @@ namespace GatOR.Logic.Editor.Properties
 
             int GetSelectedIndex()
             {
-                if (selectedPropertyDrawerIndex >= 0)
-                    return selectedPropertyDrawerIndex;
+                if (_selectedPropertyDrawerIndex >= 0)
+                    return _selectedPropertyDrawerIndex;
                 
                 return Array.IndexOf(inheritingTypes, currentReferenceType) + CustomOptions.Count;
             }

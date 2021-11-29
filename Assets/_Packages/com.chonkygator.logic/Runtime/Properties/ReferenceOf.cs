@@ -24,7 +24,7 @@ namespace GatOR.Logic.Properties
         public const string NameOfUnityObject = nameof(ReferenceOf<object>.unityObject);
     }
     
-    [System.Serializable]
+    [Serializable]
     public struct ReferenceOf<TReference> : ISerializationCallbackReceiver
         where TReference : class
     {
@@ -53,7 +53,7 @@ namespace GatOR.Logic.Properties
                         break;
                     default:
                         unityObject = null;
-                        serializedReference = null;
+                        serializedReference = value;
                         type = ReferenceOfType.SerializedReference;
                         break;
                     case null:
