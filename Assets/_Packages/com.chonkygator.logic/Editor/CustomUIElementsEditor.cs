@@ -13,7 +13,7 @@ namespace GatOR.Logic.Editor
 
         public override VisualElement CreateInspectorGUI()
         {
-            VisualElement inspector = new VisualElement();
+            var inspector = new VisualElement();
 
             var property = serializedObject.GetIterator();
             property.NextVisible(true);
@@ -43,7 +43,7 @@ namespace GatOR.Logic.Editor
         {
             public static VisualElement Default(SerializedProperty property)
             {
-                return new PropertyField(property);
+                return new PropertyField(property, property.displayName);
             }
 
             public static VisualElement Disabled(SerializedProperty property)
