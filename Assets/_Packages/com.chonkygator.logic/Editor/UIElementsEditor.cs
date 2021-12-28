@@ -19,10 +19,9 @@ namespace GatOR.Logic.Editor
 			return attribute != null ? base.CreateInspectorGUI() : null;
 		}
 
-		protected override Func<SerializedProperty, VisualElement>
-			GetVisualElementMethodFor(SerializedProperty property)
+		protected override VisualElement GetVisualElementFor(SerializedProperty property)
 		{
-			return null;
+			return default;
 		}
 	}
 }

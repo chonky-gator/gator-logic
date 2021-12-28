@@ -2,7 +2,7 @@ using UnityEditor;
 using System;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
-
+using UnityEngine;
 
 namespace GatOR.Logic.Editor
 {
@@ -25,8 +25,7 @@ namespace GatOR.Logic.Editor
 
             while (property.NextVisible(false))
             {
-                var elementFactory = GetVisualElementMethodFor(property) ?? Draw.Default;
-                var element = elementFactory(property);
+                var element = GetVisualElementFor(property) ?? Draw.Default(property);
                 if (element == null)
                     continue;
 
@@ -36,7 +35,7 @@ namespace GatOR.Logic.Editor
             return inspector;
         }
 
-        protected abstract Func<SerializedProperty, VisualElement> GetVisualElementMethodFor(SerializedProperty property);
+        protected abstract VisualElement GetVisualElementFor(SerializedProperty property);
 
 
         public class Draw
@@ -53,7 +52,33 @@ namespace GatOR.Logic.Editor
                 return element;
             }
 
-            public static VisualElement Hidden(SerializedProperty _) => null;
+            public static VisualElement Hidden(SerializedProperty property)
+            {
+                var element = Default(property);
+                element.style.display = new StyleEnum<DisplayStyle>(DisplayStyle.None);
+                return element;
+            }
+
+            public static VisualElement If(SerializedProperty property, SerializedProperty boolCondition,
+                long updateIntervalMs = 100)
+            {
+                return If(property, () => boolCondition.boolValue, updateIntervalMs);
+            }
+
+            public static VisualElement If(SerializedProperty property, Func<bool> boolCondition,
+                long updateIntervalMs = 100)
+            {
+                var element = Default(property);
+                UpdateDisplay();
+                element.schedule.Execute(UpdateDisplay).Every(updateIntervalMs);
+                return element;
+
+                void UpdateDisplay()
+                {
+                    element.style.display = boolCondition() ? new StyleEnum<DisplayStyle>(DisplayStyle.Flex)
+                        : new StyleEnum<DisplayStyle>(DisplayStyle.None);
+                }
+            }
         }
     }
 }
