@@ -15,18 +15,39 @@ namespace GatOR.Logic.Editor.Properties
             var displayName = property.displayName;
             var nameElement = new PropertyField(nameProperty, displayName);
             nameElement.RegisterCallback<SerializedPropertyChangeEvent>(OnChangeEvent);
-            OnChangeNameID(nameProperty.stringValue);
+            nameElement.RegisterCallback<GeometryChangedEvent>(OnChangeGeometryEvent);
+            OnChangeNameID();
             return nameElement;
 
-            void OnChangeEvent(SerializedPropertyChangeEvent evt) => OnChangeNameID(evt.changedProperty.stringValue);
-            
-            void OnChangeNameID(string name)
+            void OnChangeEvent(SerializedPropertyChangeEvent evt) => OnChangeNameID();
+            void OnChangeGeometryEvent(GeometryChangedEvent evt) => OnChangeNameID();
+
+            void OnChangeNameID()
             {
-                var text = $"{displayName} (Hash: {Animator.StringToHash(name)})";
-                nameElement.label = text;
-                var label = nameElement.Q<Label>();
-                if (label != null)
-                    label.text = text;
+                var label = nameElement.Q<Label>(className: "unity-property-field__label");
+                if (label == null)
+                    return;
+
+                label.style.minWidth = default;
+                const string className = "gator-extra__label";
+                var hashLabel = label.parent.Q<Label>(className: className);
+                if (hashLabel == null)
+                {
+                    hashLabel = new Label();
+                    label.parent.Add(hashLabel);
+                    hashLabel.PlaceInFront(label);
+                    hashLabel.AddToClassList(className);
+
+                    foreach (var cName in label.GetClasses())
+                        hashLabel.AddToClassList(cName);
+
+                    hashLabel.style.color = new Color(0.5f, 0.5f, 0.5f);
+                    hashLabel.style.minWidth = 120;
+                }
+
+                int hash = Animator.StringToHash(nameProperty.stringValue);
+                hashLabel.text = $"(Hash: {hash})";
+                nameElement.UnregisterCallback<GeometryChangedEvent>(OnChangeGeometryEvent);
             }
         }
 
