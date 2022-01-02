@@ -32,14 +32,13 @@ namespace GatOR.Logic.Properties
         [SerializeField] internal Object unityObject;
         [SerializeReference] internal TReference serializedReference;
 
-        private TReference _cachedReference;
         public TReference Reference
         {
             get => type switch
             {
                 ReferenceOfType.Null => null,
                 ReferenceOfType.SerializedReference => serializedReference,
-                ReferenceOfType.UnityObject => _cachedReference ??= unityObject as TReference,
+                ReferenceOfType.UnityObject => serializedReference ??= unityObject as TReference,
                 _ => throw new ArgumentOutOfRangeException(),
             };
             set
@@ -47,7 +46,7 @@ namespace GatOR.Logic.Properties
                 switch (value)
                 {
                     case Object uObj:
-                        serializedReference = null;
+                        serializedReference = value;
                         unityObject = uObj;
                         type = ReferenceOfType.UnityObject;
                         break;
@@ -65,7 +64,11 @@ namespace GatOR.Logic.Properties
             }
         }
 
-        void ISerializationCallbackReceiver.OnBeforeSerialize() { }
+        void ISerializationCallbackReceiver.OnBeforeSerialize()
+        {
+            if (serializedReference is Object)
+                serializedReference = null;
+        }
 
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
