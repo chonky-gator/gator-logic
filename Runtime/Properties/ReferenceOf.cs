@@ -32,6 +32,14 @@ namespace GatOR.Logic.Properties
         [SerializeField] internal Object unityObject;
         [SerializeReference] internal TReference serializedReference;
 
+        public ReferenceOf(TReference reference)
+        {
+            type = default;
+            unityObject = default;
+            serializedReference = default;
+            Reference = reference;
+        }
+
         public TReference Reference
         {
             get => type switch
