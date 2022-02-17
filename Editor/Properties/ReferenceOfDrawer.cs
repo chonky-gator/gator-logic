@@ -73,7 +73,7 @@ namespace GatOR.Logic.Editor.Properties
             
             _baseHeight = base.GetPropertyHeight(property, label);
             var referenceHeight = SelectedPropertyDrawer?.GetHeight(property) ?? EditorGUI.GetPropertyHeight(referenceProperty, label);
-            return _baseHeight + referenceHeight;
+            return _baseHeight + referenceHeight + 6f;
         }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -91,6 +91,7 @@ namespace GatOR.Logic.Editor.Properties
             label.text += $" <color=#888888><{referenceType.Name}> type</color>";
 
             position.height = _baseHeight;
+            position.y += 2f;
             Rect labelPosition = position;
             labelPosition.width *= 0.5f;
             EditorGUI.LabelField(labelPosition, label, GUIStyles.RichTextLabelStyle);
@@ -101,7 +102,7 @@ namespace GatOR.Logic.Editor.Properties
                 SetType(currentSelectedTypeIndex);
 
             EditorGUI.indentLevel++;
-            position.y += position.height;
+            position.y += position.height + 2f;
             if (SelectedPropertyDrawer == null)
                 EditorGUI.PropertyField(position, referenceProperty, true);
             else
