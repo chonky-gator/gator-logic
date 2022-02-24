@@ -1,3 +1,4 @@
+#if UNITY_INCLUDE_TESTS
 using NUnit.Framework;
 using UnityEngine;
 
@@ -26,3 +27,4 @@ namespace GatOR.Logic.Tests.Utils
         }
     }
 }
+#endif
