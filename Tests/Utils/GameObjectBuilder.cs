@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-namespace GatOR.Logic.TestsUtils
+namespace GatOR.Logic.Tests.Utils
 {
     public struct GameObjectBuilder : IBuilder<GameObject>, IBuilder<Transform>
     {

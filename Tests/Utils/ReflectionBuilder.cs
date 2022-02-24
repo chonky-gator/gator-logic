@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace GatOR.Logic.TestsUtils
+namespace GatOR.Logic.Tests.Utils
 {
     public class ReflectionBuilder<T>
     {

@@ -2,7 +2,7 @@ using NUnit.Framework;
 using UnityEngine;
 
 
-namespace GatOR.Logic.TestsUtils
+namespace GatOR.Logic.Tests.Utils
 {
     public static class LayerAssert
     {

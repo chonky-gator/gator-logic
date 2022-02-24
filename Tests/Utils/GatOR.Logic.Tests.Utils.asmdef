@@ -1,0 +1,20 @@
+{
+    "name": "GatOR.Logic.Tests.Utils",
+    "rootNamespace": "GatOR.Logic.Tests.Utils",
+    "references": [
+        "GUID:b6fc56f0a6c35cf4c992c181aa6b3a80"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
