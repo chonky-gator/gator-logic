@@ -1,7 +1,9 @@
 #if PACKAGE_UNITASK
 using Cysharp.Threading.Tasks;
+using Cysharp.Threading.Tasks.Linq;
 using GatOR.Logic.Time;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace GatOR.Logic
@@ -15,7 +17,7 @@ namespace GatOR.Logic
         UniTask<TimeSpan> Next(CancellationToken cancellationToken = default);
     }
 
-    public class UniTaskUpdate
+    public class UniTaskUpdate : IUniTaskAsyncEnumerable<TimeSpan>
     {
         public static UniTaskUpdate Update { get; } = new UniTaskUpdate(PlayerLoopTiming.Update,
             UnityTime.Instance);
@@ -24,6 +26,8 @@ namespace GatOR.Logic
 
         public PlayerLoopTiming Timing { get; }
         public IUpdateTime Time { get; }
+
+        private IUniTaskAsyncEnumerable<TimeSpan> updates;
         
         public UniTaskUpdate(PlayerLoopTiming timing, IUpdateTime time)
         {
@@ -35,6 +39,12 @@ namespace GatOR.Logic
         {
             await UniTask.Yield(Timing, cancellationToken);
             return Time.DeltaTime;
+        }
+
+        public IUniTaskAsyncEnumerator<TimeSpan> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        {
+            updates ??= UniTaskAsyncEnumerable.EveryUpdate(Timing).Select(_ => Time.DeltaTime);
+            return updates.GetAsyncEnumerator(cancellationToken);
         }
     }
 }

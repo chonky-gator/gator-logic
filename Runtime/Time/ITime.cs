@@ -25,7 +25,7 @@ namespace GatOR.Logic.Time
     public interface ITime
     {
         /// <summary>
-        /// How much time has passed for this time frame.
+        /// How much time has passed in this time frame.
         /// </summary>
         TimeSpan Time { get; }
     }
