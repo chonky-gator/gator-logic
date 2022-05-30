@@ -37,10 +37,10 @@ namespace GatOR.Logic.Properties
             type = default;
             unityObject = default;
             serializedReference = default;
-            Reference = reference;
+            Value = reference;
         }
 
-        public TReference Reference
+        public TReference Value
         {
             get => type switch
             {
@@ -81,7 +81,7 @@ namespace GatOR.Logic.Properties
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
             // Force cache
-            _ = Reference;
+            _ = Value;
         }
     }
 }

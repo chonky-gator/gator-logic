@@ -16,7 +16,7 @@ namespace GatOR.Logic.Tests
             var referenceOf = ATestReference();
             
             Assert.That(referenceOf.type, Is.EqualTo(ReferenceOfType.Null));
-            Assert.That(referenceOf.Reference, Is.Null);
+            Assert.That(referenceOf.Value, Is.Null);
         }
         
         [Test]
@@ -25,11 +25,11 @@ namespace GatOR.Logic.Tests
             var referenceOf = ATestReference();
             var reference = new TestNonUnityObjectWithInterface();
 
-            referenceOf.Reference = reference;
+            referenceOf.Value = reference;
             
             Assert.That(referenceOf.type, Is.EqualTo(ReferenceOfType.SerializedReference));
-            Assert.That(referenceOf.Reference, Is.Not.Null);
-            Assert.That(referenceOf.Reference, Is.EqualTo(reference));
+            Assert.That(referenceOf.Value, Is.Not.Null);
+            Assert.That(referenceOf.Value, Is.EqualTo(reference));
         }
         
         [Test]
@@ -38,12 +38,12 @@ namespace GatOR.Logic.Tests
             var referenceOf = ATestReference();
             var reference = ATestUnityObject();
 
-            referenceOf.Reference = reference;
+            referenceOf.Value = reference;
             
             Assert.That(referenceOf.type, Is.EqualTo(ReferenceOfType.UnityObject));
             Assert.That(referenceOf.unityObject, Is.EqualTo(reference));
-            Assert.That(referenceOf.Reference, Is.Not.Null);
-            Assert.That(referenceOf.Reference, Is.EqualTo(reference));
+            Assert.That(referenceOf.Value, Is.Not.Null);
+            Assert.That(referenceOf.Value, Is.EqualTo(reference));
         }
 
         public static ReferenceOf<ITestInterface> ATestReference() => new ReferenceOf<ITestInterface>();
