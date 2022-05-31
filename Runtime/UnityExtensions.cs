@@ -2,6 +2,9 @@ using System;
 using System.Collections;
 using UnityEngine;
 using Object = UnityEngine.Object;
+#if PACKAGE_UNITASK
+using Cysharp.Threading.Tasks;
+#endif
 
 namespace GatOR.Logic
 {
@@ -19,5 +22,12 @@ namespace GatOR.Logic
         public static Coroutine StartCoroutine(this MonoBehaviour monoBehaviour,
             Func<IEnumerator> enumeratorFunction) =>
             monoBehaviour.StartCoroutine(enumeratorFunction());
+        
+#if PACKAGE_UNITASK
+        public static UniTask StartCoroutineAsTask(this MonoBehaviour monoBehaviour, IEnumerator routine)
+        {
+            return routine.ToUniTask(monoBehaviour);
+        }
+#endif
     }
 }
