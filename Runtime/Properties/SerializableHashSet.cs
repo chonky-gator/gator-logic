@@ -8,8 +8,8 @@ namespace GatOR.Logic
     [System.Serializable]
     public class SerializableHashSet<T> : ISet<T>, ISerializationCallbackReceiver
     {
-        [SerializeField, Delayed] private T[] serializedArray;
-        [SerializeField] private bool conflict;
+        [SerializeField, Delayed] internal T[] serializedArray;
+        [SerializeField] internal bool conflict;
 
         private HashSet<T> hashSet;
 
