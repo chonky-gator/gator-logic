@@ -33,14 +33,25 @@ namespace GatOR.Logic.Editor
 
             var toAdd = property.FindPropertyRelative(SerializableDictionaryNames.ToAdd);
             propPosition.y += propPosition.height;
+            
+            var kvps = property.FindPropertyRelative(SerializableDictionaryNames.Kvps);
 
             var addPosition = propPosition;
             EditorGUI.PropertyField(addPosition, toAdd);
             addPosition.width = 100f;
-            GUI.Button(addPosition, "Add with key:");
+            if (GUI.Button(addPosition, "Add with key:"))
+            {
+                var newIndex = kvps.arraySize;
+                kvps.InsertArrayElementAtIndex(newIndex);
+
+                var newItem = kvps.GetArrayElementAtIndex(newIndex);
+                var newItemKey = newItem.FindPropertyRelative("key");
+                newItemKey.CopyValueFrom(toAdd);
+                
+                toAdd.ClearValue();
+            }
 
             propPosition.y += propPosition.height;
-            var kvps = property.FindPropertyRelative(SerializableDictionaryNames.Kvps);
             EditorGUI.PropertyField(propPosition, kvps);
 
             var conflict = property.FindPropertyRelative(SerializableDictionaryNames.Conflict);

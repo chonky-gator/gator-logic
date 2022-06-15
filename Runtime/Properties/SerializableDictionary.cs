@@ -3,17 +3,12 @@ using UnityEngine;
 
 namespace GatOR.Logic
 {
-    internal class SerializableDictionaryNames
-    {
-        public const string ToAdd = nameof(SerializableDictionary<object, object>.add);
-        public const string Kvps = nameof(SerializableDictionary<object, object>.kvps);
-        public const string Conflict = nameof(SerializableDictionary<object, object>.conflict);
-    }
-
     [System.Serializable]
     public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
     {
+        #if UNITY_EDITOR
         [SerializeField] internal TKey add;
+        #endif
         [SerializeField] internal SerializableKeyValuePair<TKey, TValue>[] kvps;
         [SerializeField] internal bool conflict;
 
@@ -36,15 +31,15 @@ namespace GatOR.Logic
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
-            if (kvps == null)
+            if (kvps != null)
+                return;
+            
+            kvps = new SerializableKeyValuePair<TKey, TValue>[Count];
+            int i = 0;
+            foreach (var kvp in this)
             {
-                kvps = new SerializableKeyValuePair<TKey, TValue>[Count];
-                int i = 0;
-                foreach (var kvp in this)
-                {
-                    kvps[i] = new SerializableKeyValuePair<TKey, TValue>(kvp.Key, kvp.Value);
-                    i++;
-                }
+                kvps[i] = new SerializableKeyValuePair<TKey, TValue>(kvp.Key, kvp.Value);
+                i++;
             }
         }
     }
