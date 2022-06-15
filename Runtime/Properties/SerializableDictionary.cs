@@ -6,9 +6,9 @@ namespace GatOR.Logic
     [System.Serializable]
     public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
     {
-        #if UNITY_EDITOR
-        [SerializeField] internal TKey add;
-        #endif
+        // #if UNITY_EDITOR
+        // [SerializeField] internal TKey add;
+        // #endif
         [SerializeField] internal SerializableKeyValuePair<TKey, TValue>[] kvps;
         [SerializeField] internal bool conflict;
 
@@ -25,7 +25,7 @@ namespace GatOR.Logic
             if (!conflict)
             {
                 kvps = null;
-                // Debug.Log("Succesfully deserialized dictionary!");
+                // Debug.Log("Successfully deserialized dictionary!");
             }
         }
 
