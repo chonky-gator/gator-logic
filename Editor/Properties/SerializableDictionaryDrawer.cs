@@ -1,5 +1,4 @@
 using UnityEditor;
-using UnityEditorInternal;
 using UnityEngine;
 
 namespace GatOR.Logic.Editor
@@ -7,14 +6,18 @@ namespace GatOR.Logic.Editor
     [CustomPropertyDrawer(typeof(SerializableDictionary<,>))]
     public class SerializableDictionaryDrawer : PropertyDrawer
     {
+        private const string KvpsFieldName = nameof(SerializableDictionary<string, string>.kvps);
+        private const string ToAddFieldName = nameof(SerializableDictionary<string, string>.add);
+        private const string ConflictFieldName = nameof(SerializableDictionary<string, string>.conflict);
+        
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            var kvps = property.FindPropertyRelative(SerializableDictionaryNames.Kvps);
+            var kvps = property.FindPropertyRelative(KvpsFieldName);
             kvps.isExpanded = true;
 
             var height = EditorGUI.GetPropertyHeight(property, label, true);
 
-            var conflict = property.FindPropertyRelative(SerializableDictionaryNames.Conflict);
+            var conflict = property.FindPropertyRelative(ConflictFieldName);
             if (conflict.boolValue)
                 height += EditorGUIUtility.singleLineHeight;
 
@@ -31,10 +34,10 @@ namespace GatOR.Logic.Editor
 
             EditorGUI.indentLevel++;
 
-            var toAdd = property.FindPropertyRelative(SerializableDictionaryNames.ToAdd);
+            var toAdd = property.FindPropertyRelative(ToAddFieldName);
             propPosition.y += propPosition.height;
             
-            var kvps = property.FindPropertyRelative(SerializableDictionaryNames.Kvps);
+            var kvps = property.FindPropertyRelative(KvpsFieldName);
 
             var addPosition = propPosition;
             EditorGUI.PropertyField(addPosition, toAdd);
@@ -54,7 +57,7 @@ namespace GatOR.Logic.Editor
             propPosition.y += propPosition.height;
             EditorGUI.PropertyField(propPosition, kvps);
 
-            var conflict = property.FindPropertyRelative(SerializableDictionaryNames.Conflict);
+            var conflict = property.FindPropertyRelative(ConflictFieldName);
             if (conflict.boolValue)
             {
                 propPosition.y += EditorGUI.GetPropertyHeight(kvps, label, true);
