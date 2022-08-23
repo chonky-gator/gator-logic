@@ -24,11 +24,11 @@ namespace GatOR.Logic.Properties
         {
             get
             {
-                if (!hasHash)
-                {
-                    hash = GetHash(name);
-                    hasHash = true;
-                }
+                if (hasHash)
+                    return hash;
+                
+                hash = GetHash(name);
+                hasHash = true;
                 return hash;
             }
         }
@@ -51,6 +51,7 @@ namespace GatOR.Logic.Properties
         {
         }
 
-        public static implicit operator ShaderID(string name) => new ShaderID(name);
+        public static implicit operator ShaderID(string name) => new(name);
+        public static implicit operator int(ShaderID id) => id.Hash;
     }
 }

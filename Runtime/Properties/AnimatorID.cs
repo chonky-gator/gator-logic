@@ -23,11 +23,11 @@ namespace GatOR.Logic.Properties
         {
             get
             {
-                if (!hasHash)
-                {
-                    hash = GetHash(name);
-                    hasHash = true;
-                }
+                if (hasHash)
+                    return hash;
+                
+                hash = GetHash(name);
+                hasHash = true;
                 return hash;
             }
         }
@@ -50,7 +50,8 @@ namespace GatOR.Logic.Properties
         {
         }
 
-        public static implicit operator AnimatorID(string name) => new AnimatorID(name);
+        public static implicit operator AnimatorID(string name) => new(name);
+        public static implicit operator int(AnimatorID id) => id.Hash;
     }
 
     public static class AnimatorIDExtensions
