@@ -33,12 +33,15 @@ namespace GatOR.Logic.Editor.Editor.Properties
 
 			var asset = ScriptableObject.CreateInstance(type);
 			property.objectReferenceValue = asset;
-			
-			var path = AssetDatabase.GenerateUniqueAssetPath($"Assets/New{type}.asset");
+			property.serializedObject.ApplyModifiedProperties();
+
+			var path = EditorUtility.SaveFilePanelInProject("Save Asset", type,
+				"asset", "Save asset with name");
 			AssetDatabase.CreateAsset(asset, path);
 			AssetDatabase.SaveAssets();
 
 			EditorGUIUtility.PingObject(asset);
+			GUIUtility.ExitGUI(); // Prevents InvalidOperationException
 		}
 	}
 }
