@@ -12,7 +12,8 @@ this package includes a generic struct `ReferenceOf<T>` that uses Unity's 2020.3
 
 ```C#
 /*
-* Any of these fields will be serialized and shown into the inspector, like it would happen with an UnityEngine.Object
+* Any of these fields will be serialized and shown into the inspector, the same way it would
+* happen with an UnityEngine.Object reference
 * Of course, it does works as well if you replace "[SerializeField] private" with "public"
 */
 [SerializeField] private ReferenceOf<IHealth> health;
@@ -74,7 +75,8 @@ which help us repeat this design pattern.
 // IConstructable 
 public class Enemy : MonoBehaviour, IConstructable<IHealth, DifficultySettings>
 {
-  // I would reccommend to use private serialized fields to only allow the constructor to modify these values
+  // I would reccommend to use private serialized fields to only allow the constructor
+  // to modify these values.
   [SerializeField] private ReferenceOf<IHealth> health;
   [SerializeField] private DifficultySettings difficulty;
 
@@ -85,7 +87,7 @@ public class Enemy : MonoBehaviour, IConstructable<IHealth, DifficultySettings>
   public void Construct(IHealth health, DifficultySettings difficulty)
   {
     // This safeguards when IsConstructed is true. It will throw an
-    // AlreadyConstructedException to avoid executing the code below
+    // AlreadyConstructedException to avoid executing the code below.
     this.ThrowIfAlreadyConstructed();
     
     // We can also detect errors early, like null values
@@ -99,7 +101,7 @@ public class Enemy : MonoBehaviour, IConstructable<IHealth, DifficultySettings>
   public void Damage(int amount)
   {
     // We can safeguard with a Debug.Assert to detect bugs related to the object not
-    // being constructed yet
+    // being constructed yet.
     this.AssertAlreadyConstructed();
     this.ThrowIfNotConstructed(); // Or you can safeguard with throw if you prefer it that way
     health.Value.Damage(amount);
