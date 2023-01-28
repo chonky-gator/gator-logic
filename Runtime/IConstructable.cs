@@ -44,5 +44,12 @@ namespace GatOR.Logic
             if (!constructable.IsConstructed)
                 throw new NotConstructedException();
         }
+
+        public static bool AssertAlreadyConstructed(this IConstructable constructable)
+        {
+            UnityEngine.Debug.Assert(constructable.IsConstructed, $"({constructable}) not constructed.",
+                constructable as UnityEngine.Object);
+            return constructable.IsConstructed;
+        }
     }
 }
