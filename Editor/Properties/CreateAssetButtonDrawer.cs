@@ -30,18 +30,29 @@ namespace GatOR.Logic.Editor.Editor.Properties
 				return;
 			
 			var type = SelectedTypeRegex.Match(property.type).Groups[1].Value;
+			var path = EditorUtility.SaveFilePanelInProject("Save Asset", type,
+				"asset", "Save asset with name");
+
+			if (string.IsNullOrEmpty(path))
+			{
+				GUIUtility.ExitGUI(); // Prevents InvalidOperationException
+				return;
+			}
 
 			var asset = ScriptableObject.CreateInstance(type);
 			property.objectReferenceValue = asset;
 			property.serializedObject.ApplyModifiedProperties();
-
-			var path = EditorUtility.SaveFilePanelInProject("Save Asset", type,
-				"asset", "Save asset with name");
+			
 			AssetDatabase.CreateAsset(asset, path);
 			AssetDatabase.SaveAssets();
 
 			EditorGUIUtility.PingObject(asset);
 			GUIUtility.ExitGUI(); // Prevents InvalidOperationException
+		}
+
+		private void CreateObject()
+		{
+			
 		}
 	}
 }
