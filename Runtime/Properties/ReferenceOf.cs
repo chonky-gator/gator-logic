@@ -10,43 +10,42 @@ namespace GatOR.Logic.Properties
         TReference Interface { get; set; }
     }
 
-    public enum ReferenceOfType
+    public enum ReferenceKind
     {
         Null,
         SerializedReference,
         UnityObject,
     }
 
-    internal static class ReferenceOf
-    {
-        public const string NameOfType = nameof(ReferenceOf<object>.type);
-        public const string NameOfSerializedReference = nameof(ReferenceOf<object>.serializedReference);
-        public const string NameOfUnityObject = nameof(ReferenceOf<object>.unityObject);
-    }
-    
     [Serializable]
     public struct ReferenceOf<TReference> : ISerializationCallbackReceiver
         where TReference : class
     {
-        [SerializeField] internal ReferenceOfType type;
         [SerializeField] internal Object unityObject;
         [SerializeReference] internal TReference serializedReference;
+#if UNITY_EDITOR
+        [SerializeField, HideInInspector] internal string selectedConcreteType;
+#endif
+        internal ReferenceKind kind;
 
         public ReferenceOf(TReference reference)
         {
-            type = default;
+            kind = default;
             unityObject = default;
             serializedReference = default;
+#if UNITY_EDITOR
+            selectedConcreteType = default;
+#endif
             Value = reference;
         }
 
         public TReference Value
         {
-            get => type switch
+            get => kind switch
             {
-                ReferenceOfType.Null => null,
-                ReferenceOfType.SerializedReference => serializedReference,
-                ReferenceOfType.UnityObject => serializedReference ??= unityObject as TReference,
+                ReferenceKind.Null => null,
+                ReferenceKind.SerializedReference => serializedReference,
+                ReferenceKind.UnityObject => serializedReference ??= unityObject as TReference,
                 _ => throw new ArgumentOutOfRangeException(),
             };
             set
@@ -56,17 +55,17 @@ namespace GatOR.Logic.Properties
                     case Object uObj:
                         serializedReference = value;
                         unityObject = uObj;
-                        type = ReferenceOfType.UnityObject;
-                        break;
-                    default:
-                        unityObject = null;
-                        serializedReference = value;
-                        type = ReferenceOfType.SerializedReference;
+                        kind = ReferenceKind.UnityObject;
                         break;
                     case null:
                         unityObject = null;
                         serializedReference = null;
-                        type = ReferenceOfType.Null;
+                        kind = ReferenceKind.Null;
+                        break;
+                    default:
+                        unityObject = null;
+                        serializedReference = value;
+                        kind = ReferenceKind.SerializedReference;
                         break;
                 }
             }
@@ -75,13 +74,31 @@ namespace GatOR.Logic.Properties
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
             if (serializedReference is Object)
+            {
                 serializedReference = null;
+            }
+            else
+            {
+                unityObject = null;
+            }
         }
 
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
-            // Force cache
-            _ = Value;
+            if (unityObject != null)
+            {
+                serializedReference = unityObject as TReference;
+                kind = ReferenceKind.UnityObject;
+            }
+            else if (serializedReference != null)
+            {
+                unityObject = null;
+                kind = ReferenceKind.SerializedReference;
+            }
+            else
+            {
+                kind = ReferenceKind.Null;
+            }
         }
     }
 }

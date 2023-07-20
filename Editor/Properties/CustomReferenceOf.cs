@@ -23,17 +23,17 @@ namespace GatOR.Logic.Editor.Properties
     {
         public abstract GUIContent Name { get; }
         
-        protected abstract ReferenceOfType ExpectedType { get; }
+        protected abstract ReferenceKind ExpectedType { get; }
         
         public virtual bool IsSelected(SerializedProperty baseProperty, Type expectedType)
         {
-            using var typeProperty = baseProperty.FindPropertyRelative(nameof(ReferenceOf<object>.type));
-            return (ReferenceOfType)typeProperty.enumValueIndex == ExpectedType;
+            using var typeProperty = baseProperty.FindPropertyRelative(nameof(ReferenceOf<object>.kind));
+            return (ReferenceKind)typeProperty.enumValueIndex == ExpectedType;
         }
 
         public virtual void Select(SerializedProperty baseProperty)
         {
-            using var typeProperty = baseProperty.FindPropertyRelative(nameof(ReferenceOf<object>.type));
+            using var typeProperty = baseProperty.FindPropertyRelative(nameof(ReferenceOf<object>.kind));
             typeProperty.enumValueIndex = (int)ExpectedType;
         }
 
@@ -46,7 +46,7 @@ namespace GatOR.Logic.Editor.Properties
     {
         public override GUIContent Name { get; } = new GUIContent("<None>");
 
-        protected override ReferenceOfType ExpectedType => ReferenceOfType.Null;
+        protected override ReferenceKind ExpectedType => ReferenceKind.Null;
 
         public override void Select(SerializedProperty baseProperty)
         {

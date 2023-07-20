@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using JetBrains.Annotations;
 
 namespace GatOR.Logic.Editor
 {
@@ -35,6 +36,13 @@ namespace GatOR.Logic.Editor
         /// <returns>The individual type</returns>
         public static Type GetIndividualType(FieldInfo field) => GetIndividualType(field.FieldType);
 
+        /// <summary>
+        /// Gets a type from the string format: "{Assembly name} {Type full namespaced name}".
+        /// e.g: GatOR GatOR.ExampleClass
+        /// </summary>
+        /// <param name="name">The string with the required format.</param>
+        /// <returns>The type or null if name was null.</returns>
+        [CanBeNull]
         public static Type GetTypeWithFullName(string name)
         {
             if (string.IsNullOrEmpty(name))
@@ -43,8 +51,10 @@ namespace GatOR.Logic.Editor
             var match = AssemblyRegex.Match(name);
             string assemblyName = match.Groups[1].Value, typeName = match.Groups[2].Value;
 
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            var assembly = assemblies.First(IsAssemblyWithName);
+            var assembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(IsAssemblyWithName);
+            if (assembly == null)
+                return null;
+            
             var type = assembly.GetType(typeName);
             return type;
 
@@ -53,6 +63,12 @@ namespace GatOR.Logic.Editor
                 var nameInfo = targetAssembly.GetName();
                 return nameInfo.Name == assemblyName;
             }
+        }
+
+        [NotNull]
+        public static string AsFullnameType([NotNull] Type type)
+        {
+            return $"{type.Assembly.GetName().Name} {type.FullName}";
         }
     }
 }

@@ -15,7 +15,7 @@ namespace GatOR.Logic.Tests
         {
             var referenceOf = ATestReference();
             
-            Assert.That(referenceOf.type, Is.EqualTo(ReferenceOfType.Null));
+            Assert.That(referenceOf.kind, Is.EqualTo(ReferenceKind.Null));
             Assert.That(referenceOf.Value, Is.Null);
         }
         
@@ -27,7 +27,7 @@ namespace GatOR.Logic.Tests
 
             referenceOf.Value = reference;
             
-            Assert.That(referenceOf.type, Is.EqualTo(ReferenceOfType.SerializedReference));
+            Assert.That(referenceOf.kind, Is.EqualTo(ReferenceKind.SerializedReference));
             Assert.That(referenceOf.Value, Is.Not.Null);
             Assert.That(referenceOf.Value, Is.EqualTo(reference));
         }
@@ -40,7 +40,7 @@ namespace GatOR.Logic.Tests
 
             referenceOf.Value = reference;
             
-            Assert.That(referenceOf.type, Is.EqualTo(ReferenceOfType.UnityObject));
+            Assert.That(referenceOf.kind, Is.EqualTo(ReferenceKind.UnityObject));
             Assert.That(referenceOf.unityObject, Is.EqualTo(reference));
             Assert.That(referenceOf.Value, Is.Not.Null);
             Assert.That(referenceOf.Value, Is.EqualTo(reference));

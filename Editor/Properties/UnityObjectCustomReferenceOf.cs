@@ -12,7 +12,12 @@ namespace GatOR.Logic.Editor.Properties
     {
         public override GUIContent Name { get; } = new GUIContent("<Unity Object>");
 
-        protected override ReferenceOfType ExpectedType => ReferenceOfType.UnityObject;
+        protected override ReferenceKind ExpectedType => ReferenceKind.UnityObject;
+
+        public override bool IsSelected(SerializedProperty baseProperty, Type expectedType)
+        {
+            return false;
+        }
 
         public override void Select(SerializedProperty baseProperty)
         {
@@ -24,7 +29,7 @@ namespace GatOR.Logic.Editor.Properties
 
         public override void OnDraw(SerializedProperty baseProperty, Rect position, Type expectedType)
         {
-            using var unityObjectProperty = baseProperty.FindPropertyRelative(ReferenceOf.NameOfUnityObject);
+            using var unityObjectProperty = baseProperty.FindPropertyRelative(nameof(ReferenceOf<object>.unityObject));
             ObjectInterfaceField.DrawIMGUI(position, unityObjectProperty, expectedType);
         }
 

@@ -1,138 +1,159 @@
-using System;
-using System.Linq;
-using UnityEngine;
-using UnityEditor;
-using GatOR.Logic.Properties;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using GatOR.Logic.Properties;
+using JetBrains.Annotations;
+using UnityEditor;
+using UnityEngine;
 
-namespace GatOR.Logic.Editor.Properties
+namespace GatOR.Logic.Editor.Editor.Properties
 {
-    [CustomPropertyDrawer(typeof(ReferenceOf<>))]
-    public class ReferenceOfDrawer : PropertyDrawer
-    {
-        private struct Cache
-        {
-            public Type[] inheritingTypes;
-            public GUIContent[] typeNames;
-        }
+	[CustomPropertyDrawer(typeof(ReferenceOf<>))]
+	public class ReferenceOfDrawer : PropertyDrawer
+	{
+		private static readonly Dictionary<Type, TypeLookup> InfoForTypes = new();
 
-        private static readonly Dictionary<Type, Cache> InfoForTypes = new Dictionary<Type, Cache>();
+		#region Inspector Draw
+		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+		{
+			return EditorGUIUtility.singleLineHeight * 2;
+		}
 
-        private static readonly List<ICustomReferenceOf> CustomOptions = new List<ICustomReferenceOf>()
-        {
-            new NullCustomReferenceOf(),
-            new UnityObjectCustomReferenceOf(),
-        };
+		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+		{
+			using var props = new ReferenceOfProps(property);
+			var typesLookup = GetOrCreateCacheForType(props.ExpectedType);
+			
+			var drawingAt = position;
+			drawingAt.height = EditorGUIUtility.singleLineHeight;
+			
+			label.text += $" <color=#888888><{props.ExpectedType.FullName}> type</color>";
+			EditorGUI.LabelField(drawingAt, label, GUIStyles.RichTextLabelStyle);
 
-        private static float _baseHeight;
+			drawingAt.y += EditorGUIUtility.singleLineHeight;
 
-        private int _selectedPropertyDrawerIndex = -1;
-        private ICustomReferenceOf SelectedPropertyDrawer => (_selectedPropertyDrawerIndex >= 0)
-            ? CustomOptions[_selectedPropertyDrawerIndex] : null;
+			EditorGUI.indentLevel++;
 
-        private static Cache GetOrCreateInfoForType(Type type)
-        {
-            if (InfoForTypes.TryGetValue(type, out Cache cache))
-            {
-                // Debug.Log($"Got cache for type: {type}");
-                return cache;
-            }
+			var previousType = props.GetCurrentType();
+			var previousTypeIndex = typesLookup.GetIndexForType(previousType);
+			int newTypeIndex = EditorGUI.IntPopup(drawingAt, GUIContent.none, previousTypeIndex,
+				typesLookup.TypeNames, null);
 
-            Type[] inheritingTypes = AppDomain.CurrentDomain
-                .GetAssemblies()
-                .SelectMany(a => a.GetTypes())
-                .Where(t => !t.IsAbstract && type.IsAssignableFrom(t) && !typeof(UnityEngine.Object).IsAssignableFrom(t))
-                .ToArray();
-            GUIContent[] typeNames = CustomOptions
-                .Select(option => option.Name)
-                .Concat(inheritingTypes.Select(t => new GUIContent(t.Name)))
-                .ToArray();
-            var uniqueNameChecker = new HashSet<string>();
-            foreach (GUIContent name in typeNames)
-            {
-                if (uniqueNameChecker.Contains(name.text))
-                    throw new Exception($"Name \"{name.text}\" already exists.");
+			if (newTypeIndex != previousTypeIndex)
+			{
+				var newType = typesLookup.GetType(newTypeIndex);
+				var newTypeName = newType != null ? EditorUtils.AsFullnameType(newType) : null;
+				props.SelectedType = newTypeName;
+				Debug.Log($"[{newTypeIndex}]: {newTypeName}");
+			}
 
-                uniqueNameChecker.Add(name.text);
-            }
+			EditorGUI.indentLevel--;
+		}
+		#endregion
 
-            var newCache = new Cache
-            {
-                inheritingTypes = inheritingTypes,
-                typeNames = typeNames,
-            };
-            InfoForTypes[type] = newCache;
-            return newCache;
-        }
+		private static TypeLookup GetOrCreateCacheForType(Type type)
+		{
+			if (InfoForTypes.TryGetValue(type, out var cache))
+				return cache;
 
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            var referenceProperty = property.FindPropertyRelative(nameof(ReferenceOf<object>.serializedReference));
-            var referenceType = EditorUtils.GetTypeWithFullName(referenceProperty.managedReferenceFieldTypename);
-            _selectedPropertyDrawerIndex = CustomOptions.FindIndex(x => x.IsSelected(property, referenceType));
-            
-            _baseHeight = base.GetPropertyHeight(property, label);
-            var referenceHeight = SelectedPropertyDrawer?.GetHeight(property) ?? EditorGUI.GetPropertyHeight(referenceProperty, label);
-            return _baseHeight + referenceHeight + 6f;
-        }
+			var newLookup = new TypeLookup(type);
+			InfoForTypes[type] = newLookup;
+			return newLookup;
+		}
 
-        public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
-        {
-            using var referenceProperty = property.FindPropertyRelative(nameof(ReferenceOf<object>.serializedReference));
+		private readonly struct TypeLookup
+		{
+			private static readonly GUIContent[] BaseNamesList = { new("<Null>") };
+			
+			public readonly GUIContent[] TypeNames;
+			private readonly Type[] inheritingTypes;
 
-            Type currentReferenceType = EditorUtils.GetTypeWithFullName(referenceProperty.managedReferenceFullTypename);
-            Type referenceType = EditorUtils.GetTypeWithFullName(referenceProperty.managedReferenceFieldTypename);
+			public TypeLookup(Type type)
+			{
+				inheritingTypes = AppDomain.CurrentDomain
+					.GetAssemblies()
+					.SelectMany(a => a.GetTypes())
+					.Where(t => !t.IsAbstract && type.IsAssignableFrom(t))
+					.ToArray();
+				GUIContent[] typeNames = BaseNamesList
+					.Concat(inheritingTypes.Select(t => new GUIContent(t.FullName)))
+					.ToArray();
+				var uniqueNameChecker = new HashSet<string>();
+				foreach (GUIContent name in typeNames)
+				{
+					if (uniqueNameChecker.Contains(name.text))
+					{
+						Debug.LogAssertion($"Name \"{name.text}\" already exists.");
+						continue;
+					}
+					uniqueNameChecker.Add(name.text);
+				}
 
-            var info = GetOrCreateInfoForType(referenceType);
-            Type[] inheritingTypes = info.inheritingTypes;
-            GUIContent[] typeNames = info.typeNames;
+				TypeNames = typeNames;
+			}
 
-            int previousSelectedTypeIndex = GetSelectedIndex();
-            label.text += $" <color=#888888><{referenceType.Name}> type</color>";
+			[CanBeNull]
+			public Type GetType(int index)
+			{
+				return index != 0 ? inheritingTypes[index - 1] : null;
+			}
 
-            position.height = _baseHeight;
-            position.y += 2f;
-            Rect labelPosition = position;
-            labelPosition.width *= 0.5f;
-            EditorGUI.LabelField(labelPosition, label, GUIStyles.RichTextLabelStyle);
+			public int GetIndexForType(Type type)
+			{
+				if (type == null)
+					return 0;
 
-            labelPosition.x += labelPosition.width;
-            int currentSelectedTypeIndex = EditorGUI.IntPopup(labelPosition, null, previousSelectedTypeIndex, typeNames, null);
-            if (currentSelectedTypeIndex != previousSelectedTypeIndex)
-                SetType(currentSelectedTypeIndex);
+				var index = Array.IndexOf(inheritingTypes, type);
+				return index >= 0 ? (index + 1) : -1;
+			}
+		}
 
-            EditorGUI.indentLevel++;
-            position.y += position.height + 2f;
-            if (SelectedPropertyDrawer == null)
-                EditorGUI.PropertyField(position, referenceProperty, true);
-            else
-                SelectedPropertyDrawer.OnDraw(property, position, referenceType);
-            EditorGUI.indentLevel--;
+		private readonly struct ReferenceOfProps : IDisposable
+		{
+			/// <summary>What type is the <see cref="ReferenceOf{TReference}"/> expecting.</summary>
+			public readonly Type ExpectedType;
+			
+			private readonly SerializedProperty serializedReferenceProp;
+			private readonly SerializedProperty unityObjectProp;
+			private readonly SerializedProperty selectedTypeProp;
+			public string SelectedType
+			{
+				get => selectedTypeProp.stringValue;
+				set => selectedTypeProp.stringValue = value;
+			}
 
-            int GetSelectedIndex()
-            {
-                if (_selectedPropertyDrawerIndex >= 0)
-                    return _selectedPropertyDrawerIndex;
-                
-                return Array.IndexOf(inheritingTypes, currentReferenceType) + CustomOptions.Count;
-            }
+			public ReferenceOfProps(SerializedProperty from)
+			{
+				serializedReferenceProp = from.FindPropertyRelative(nameof(ReferenceOf<object>.serializedReference));
+				ExpectedType = EditorUtils.GetTypeWithFullName(serializedReferenceProp.managedReferenceFieldTypename);
+				unityObjectProp = from.FindPropertyRelative(nameof(ReferenceOf<object>.unityObject));
+				selectedTypeProp = from.FindPropertyRelative(nameof(ReferenceOf<object>.selectedConcreteType));
+			}
 
-            void SetType(int index)
-            {
-                if (index < CustomOptions.Count)
-                {
-                    CustomOptions[index].Select(property);
-                    return;
-                }
-                var newType = inheritingTypes[index - CustomOptions.Count];
-                referenceProperty.managedReferenceValue = Activator.CreateInstance(newType);
-                
-                using var typeReference = property.FindPropertyRelative(nameof(ReferenceOf<object>.type));
-                typeReference.enumValueIndex = (int)ReferenceOfType.SerializedReference;
-                
-                using var unityObjectReference = property.FindPropertyRelative(nameof(ReferenceOf<object>.unityObject));
-                unityObjectReference.objectReferenceValue = null;
-            }
-        }
-    }
+			/// <summary>Gets the type of the currently assign object.</summary>
+			/// <returns>The type of the object, can be null.</returns>
+			[CanBeNull]
+			public Type GetCurrentType()
+			{
+				var currentType = EditorUtils.GetTypeWithFullName(SelectedType);
+				if (currentType != null)
+					return currentType;
+
+				var unityObject = unityObjectProp.objectReferenceValue;
+				if (unityObject != null)
+					return unityObject.GetType();
+
+				var serializedType =
+					EditorUtils.GetTypeWithFullName(serializedReferenceProp.managedReferenceFullTypename);
+				return serializedType;
+			}
+			
+			public void Dispose()
+			{
+				serializedReferenceProp.Dispose();
+				unityObjectProp.Dispose();
+				selectedTypeProp.Dispose();
+			}
+		}
+	}
 }
