@@ -26,11 +26,11 @@ namespace GatOR.Logic.Properties
 #if UNITY_EDITOR
         [SerializeField, HideInInspector] internal string selectedConcreteType;
 #endif
-        internal ReferenceKind kind;
+        public ReferenceKind Kind { get; private set; }
 
         public ReferenceOf(TReference reference)
         {
-            kind = default;
+            Kind = default;
             unityObject = default;
             serializedReference = default;
 #if UNITY_EDITOR
@@ -41,7 +41,7 @@ namespace GatOR.Logic.Properties
 
         public TReference Value
         {
-            get => kind switch
+            get => Kind switch
             {
                 ReferenceKind.Null => null,
                 ReferenceKind.SerializedReference => serializedReference,
@@ -55,17 +55,17 @@ namespace GatOR.Logic.Properties
                     case Object uObj:
                         serializedReference = value;
                         unityObject = uObj;
-                        kind = ReferenceKind.UnityObject;
+                        Kind = ReferenceKind.UnityObject;
                         break;
                     case null:
                         unityObject = null;
                         serializedReference = null;
-                        kind = ReferenceKind.Null;
+                        Kind = ReferenceKind.Null;
                         break;
                     default:
                         unityObject = null;
                         serializedReference = value;
-                        kind = ReferenceKind.SerializedReference;
+                        Kind = ReferenceKind.SerializedReference;
                         break;
                 }
             }
@@ -88,16 +88,16 @@ namespace GatOR.Logic.Properties
             if (unityObject != null)
             {
                 serializedReference = unityObject as TReference;
-                kind = ReferenceKind.UnityObject;
+                Kind = ReferenceKind.UnityObject;
             }
             else if (serializedReference != null)
             {
                 unityObject = null;
-                kind = ReferenceKind.SerializedReference;
+                Kind = ReferenceKind.SerializedReference;
             }
             else
             {
-                kind = ReferenceKind.Null;
+                Kind = ReferenceKind.Null;
             }
         }
     }
