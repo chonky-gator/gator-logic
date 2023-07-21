@@ -4,12 +4,6 @@ using Object = UnityEngine.Object;
 
 namespace GatOR.Logic.Properties
 {
-    public interface IReference<TReference>
-        where TReference : class
-    {
-        TReference Interface { get; set; }
-    }
-
     public enum ReferenceKind
     {
         Null,
@@ -18,17 +12,16 @@ namespace GatOR.Logic.Properties
     }
 
     [Serializable]
-    public struct ReferenceOf<TReference> : ISerializationCallbackReceiver
-        where TReference : class
+    public struct ReferenceOf<T> : ISerializationCallbackReceiver where T : class
     {
         [SerializeField] internal Object unityObject;
-        [SerializeReference] internal TReference serializedReference;
+        [SerializeReference] internal T serializedReference;
 #if UNITY_EDITOR
         [SerializeField, HideInInspector] internal string selectedConcreteType;
 #endif
         public ReferenceKind Kind { get; private set; }
 
-        public ReferenceOf(TReference reference)
+        public ReferenceOf(T reference)
         {
             Kind = default;
             unityObject = default;
@@ -39,13 +32,13 @@ namespace GatOR.Logic.Properties
             Value = reference;
         }
 
-        public TReference Value
+        public T Value
         {
             get => Kind switch
             {
                 ReferenceKind.Null => null,
                 ReferenceKind.SerializedReference => serializedReference,
-                ReferenceKind.UnityObject => serializedReference ??= unityObject as TReference,
+                ReferenceKind.UnityObject => serializedReference ??= unityObject as T,
                 _ => throw new ArgumentOutOfRangeException(),
             };
             set
@@ -71,6 +64,8 @@ namespace GatOR.Logic.Properties
             }
         }
 
+        public override string ToString() => $"Reference<{typeof(T).FullName}> {Value}";
+
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
             if (Value is Object)
@@ -87,7 +82,7 @@ namespace GatOR.Logic.Properties
         {
             if (unityObject != null)
             {
-                serializedReference = unityObject as TReference;
+                serializedReference = unityObject as T;
                 Kind = ReferenceKind.UnityObject;
             }
             else if (serializedReference != null)
