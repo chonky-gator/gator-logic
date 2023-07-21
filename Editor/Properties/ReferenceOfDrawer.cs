@@ -14,21 +14,25 @@ namespace GatOR.Logic.Editor.Editor.Properties
 		private static readonly Dictionary<Type, TypeLookup> InfoForTypes = new();
 		private static readonly GUIContent TypeLabel = new("Type");
 
+		private static readonly float LineHeight = EditorGUIUtility.singleLineHeight + 2f;
+
 		#region Inspector Draw
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
-			return EditorGUIUtility.singleLineHeight * 4;
+			using var props = new ReferenceOfProps(property);
+			return props.GetHeight();
 		}
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			using var props = new ReferenceOfProps(property);
-			var typesLookup = GetOrCreateCacheForType(props.ExpectedType);
+			var expectedType = props.GetExpectedType();
+			var typesLookup = GetOrCreateCacheForType(expectedType);
 			
 			var drawingAt = position;
 			drawingAt.height = EditorGUIUtility.singleLineHeight;
 			
-			label.text += $" <color=#888888><{props.ExpectedType.FullName}></color>";
+			label.text += $" <color=#888888><{expectedType.FullName}></color>";
 			EditorGUI.LabelField(drawingAt, label, GUIStyles.RichTextLabelStyle);
 
 			EditorGUI.indentLevel++;
@@ -43,7 +47,7 @@ namespace GatOR.Logic.Editor.Editor.Properties
 			if (newTypeIndex != previousTypeIndex)
 				props.SelectNewType(newType);
 
-			drawingAt.y += EditorGUIUtility.singleLineHeight;
+			drawingAt.y += LineHeight;
 			props.Draw(drawingAt, newType, GetReferenceKind(newType));
 
 			EditorGUI.indentLevel--;
@@ -118,8 +122,6 @@ namespace GatOR.Logic.Editor.Editor.Properties
 
 		private readonly struct ReferenceOfProps : IDisposable
 		{
-			/// <summary>What type is the <see cref="ReferenceOf{TReference}"/> expecting.</summary>
-			public readonly Type ExpectedType;
 			
 			private readonly SerializedProperty serializedReferenceProp;
 			private readonly SerializedProperty unityObjectProp;
@@ -128,7 +130,6 @@ namespace GatOR.Logic.Editor.Editor.Properties
 			public ReferenceOfProps(SerializedProperty from)
 			{
 				serializedReferenceProp = from.FindPropertyRelative(nameof(ReferenceOf<object>.serializedReference));
-				ExpectedType = EditorUtils.GetTypeWithFullName(serializedReferenceProp.managedReferenceFieldTypename);
 				unityObjectProp = from.FindPropertyRelative(nameof(ReferenceOf<object>.unityObject));
 				selectedTypeProp = from.FindPropertyRelative(nameof(ReferenceOf<object>.selectedConcreteType));
 			}
@@ -156,6 +157,20 @@ namespace GatOR.Logic.Editor.Editor.Properties
 				}
 			}
 
+			public float GetHeight()
+			{
+				var height = LineHeight * 2f;
+				var currentType = GetCurrentType();
+				height += GetReferenceKind(currentType) switch
+				{
+					ReferenceKind.Null => 0f,
+					ReferenceKind.SerializedReference => EditorGUI.GetPropertyHeight(serializedReferenceProp, true),
+					ReferenceKind.UnityObject => EditorGUI.GetPropertyHeight(unityObjectProp, true),
+					_ => throw new ArgumentOutOfRangeException()
+				};
+				return height;
+			}
+
 			public void Draw(Rect position, Type type, ReferenceKind referenceKind)
 			{
 				switch (referenceKind)
@@ -175,6 +190,10 @@ namespace GatOR.Logic.Editor.Editor.Properties
 						throw new ArgumentOutOfRangeException(nameof(referenceKind), referenceKind, null);
 				}
 			}
+
+			/// <summary>What type is the <see cref="ReferenceOf{TReference}"/> expecting.</summary>
+			public Type GetExpectedType() =>
+				EditorUtils.GetTypeWithFullName(serializedReferenceProp.managedReferenceFieldTypename);
 
 			/// <summary>Gets the type of the currently assign object.</summary>
 			/// <returns>The type of the object, can be null.</returns>

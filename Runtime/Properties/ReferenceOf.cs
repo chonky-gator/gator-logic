@@ -73,7 +73,7 @@ namespace GatOR.Logic.Properties
 
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
-            if (serializedReference is Object)
+            if (Value is Object)
             {
                 serializedReference = null;
             }
