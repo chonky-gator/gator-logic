@@ -40,15 +40,15 @@ public void Damage(int amount)
 }
 ```
 
-The value in the inspector is shown with the type `<ITest>` in this case and we can set it as a Unity object. Unfortunately, I was only able to
-display an object field that accepts any Unity Object, but when we assign it, it will filter any value that it's not the interface we want. Or
-if it is a GameObject, it will try to get the first component with that interface.
+The value in the inspector is shown with the type `<ITest>` in this case and we can select the concrete type that we want to assign to.
 
 ![ReferenceOf example with Unity Objects](https://user-images.githubusercontent.com/29787965/214464474-d3f573ed-eca7-4aed-bd95-0d0d6343e29b.png)
 
 Alternatively, it will also accept any class that implements that interface and has [Serializable]
 
 ![ReferenceOf example with custom serializable class](https://user-images.githubusercontent.com/29787965/214465013-d1a42893-9793-40cc-9139-b6ba12187d8a.png)
+
+Any reference that implements that interface can be assigned through that interface seamlessly. It's really useful when you want to unit test with a mock object.
 
 ## [CreateAssetButton] - Easily create new ScriptableObjects when needed
 
