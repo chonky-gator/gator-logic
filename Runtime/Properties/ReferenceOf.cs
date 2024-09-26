@@ -11,6 +11,11 @@ namespace GatOR.Logic.Properties
         UnityObject,
     }
 
+    /// <summary>
+    /// Use this struct to reference to any unity object or serializable object of type T.
+    /// Useful to reference interfaces to abstract logic and to facilitate unit testing.
+    /// </summary>
+    /// <typeparam name="T">The type we want to reference</typeparam>
     [Serializable]
     public struct ReferenceOf<T> : ISerializationCallbackReceiver where T : class
     {
@@ -19,6 +24,10 @@ namespace GatOR.Logic.Properties
 #if UNITY_EDITOR
         [SerializeField, HideInInspector] internal string selectedConcreteType;
 #endif
+
+        /// <summary>
+        /// Are we referencing an unity object, a serialized object or just a null reference.
+        /// </summary>
         public ReferenceKind Kind { get; private set; }
 
         public ReferenceOf(T reference)
