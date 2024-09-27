@@ -12,6 +12,9 @@ namespace GatOR.Logic.Editor.Editor.Properties
 	[CustomPropertyDrawer(typeof(ReferenceOf<>))]
 	public class ReferenceOfDrawer : PropertyDrawer
 	{
+		// This code ended up being a mess of hacks, due to unity's serialization and IMGUI calls
+		// And specially to make it compatible with the [CreateAssetButton] functionality
+		
 		private static readonly Dictionary<Type, TypeLookup> InfoForTypes = new();
 		private static readonly GUIContent TypeLabel = new("Type");
 
@@ -198,7 +201,7 @@ namespace GatOR.Logic.Editor.Editor.Properties
 					case ReferenceKind.UnityObject:
 						if (typeof(ScriptableObject).IsAssignableFrom(type) && HasCreateAssetButtonAttribute())
 						{
-							CreateAssetButtonDrawer.OnGUIStatic(position, unityObjectProp, null);
+							CreateAssetButtonDrawer.OnGUIStatic(position, unityObjectProp, null, type);
 						}
 						else
 						{

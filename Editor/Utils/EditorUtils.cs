@@ -23,7 +23,7 @@ namespace GatOR.Logic.Editor
                 return type.GetElementType();
 
             // List
-            if (type.GetGenericTypeDefinition() == typeof(List<>))
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
                 return type.GenericTypeArguments[0];
 
             return type;

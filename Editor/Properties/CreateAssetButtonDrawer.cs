@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using GatOR.Logic.Properties;
 using UnityEditor;
@@ -24,17 +25,17 @@ namespace GatOR.Logic.Editor.Editor.Properties
 			if (IsReferenceOf(fieldInfo))
 				ReferenceOfDrawer.OnGUIStatic(position, property, label, fieldInfo);
 			else
-				OnGUIStatic(position, property, label);
+				OnGUIStatic(position, property, label, null);
 		}
 
 		public static bool IsReferenceOf(FieldInfo fieldInfo)
 		{
 			var fieldType = EditorUtils.GetIndividualType(fieldInfo);
-			return fieldType.GetGenericTypeDefinition() == typeof(ReferenceOf<>);
+			return fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(ReferenceOf<>);
 		}
 		
 		public static void OnGUIStatic(Rect position, SerializedProperty property,
-			GUIContent label)
+			GUIContent label, Type targetType)
 		{
 			if (property.propertyType != SerializedPropertyType.ObjectReference)
 			{
@@ -45,18 +46,28 @@ namespace GatOR.Logic.Editor.Editor.Properties
 
 			var itemPosition = position;
 			itemPosition.width = position.width * 0.75f;
-			EditorGUI.PropertyField(itemPosition, property, label);
+			if (targetType != null)
+			{
+				property.objectReferenceValue = EditorGUI.ObjectField(itemPosition, label ?? GUIContent.none,
+					property.objectReferenceValue,
+					targetType, property.serializedObject.targetObject);
+			}
+			else
+			{
+				EditorGUI.PropertyField(itemPosition, property, label);
+			}
 
 			const float padding = 4f;
 			itemPosition.x += itemPosition.width + padding;
 			itemPosition.width = position.width * 0.25f - padding;
 			if (GUI.Button(itemPosition, "Create"))
-				CreateObject(property);
+				CreateObject(property, targetType);
 		}
 
-		private static void CreateObject(SerializedProperty property)
+		private static void CreateObject(SerializedProperty property, Type targetType)
 		{
-			var type = SelectedTypeRegex.Match(property.type).Groups[1].Value;
+			var type = targetType?.Name ?? SelectedTypeRegex.Match(property.type).Groups[1].Value;
+			Debug.Log($"Creating {type}");
 			var path = EditorUtility.SaveFilePanelInProject("Save Asset", type,
 				"asset", "Save asset with name");
 
