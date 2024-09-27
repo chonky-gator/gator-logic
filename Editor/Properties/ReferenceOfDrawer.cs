@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using GatOR.Logic.Properties;
 using JetBrains.Annotations;
 using UnityEditor;
@@ -19,13 +20,23 @@ namespace GatOR.Logic.Editor.Editor.Properties
 		#region Inspector Draw
 		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 		{
-			using var props = new ReferenceOfProps(property);
+			return GetPropertyHeightStatic(property, label, fieldInfo);
+		}
+		
+		public static float GetPropertyHeightStatic(SerializedProperty property, GUIContent label, FieldInfo fieldInfo)
+		{
+			using var props = new ReferenceOfProps(property, fieldInfo);
 			return props.GetHeight();
 		}
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
-			using var props = new ReferenceOfProps(property);
+			OnGUIStatic(position, property, label, fieldInfo);
+		}
+		
+		public static void OnGUIStatic(Rect position, SerializedProperty property, GUIContent label, FieldInfo fieldInfo)
+		{
+			using var props = new ReferenceOfProps(property, fieldInfo);
 			var expectedType = props.GetExpectedType();
 			var typesLookup = GetOrCreateCacheForType(expectedType);
 			
@@ -122,16 +133,22 @@ namespace GatOR.Logic.Editor.Editor.Properties
 
 		private readonly struct ReferenceOfProps : IDisposable
 		{
-			
 			private readonly SerializedProperty serializedReferenceProp;
 			private readonly SerializedProperty unityObjectProp;
 			private readonly SerializedProperty selectedTypeProp;
+			private readonly FieldInfo fieldInfo;
 
-			public ReferenceOfProps(SerializedProperty from)
+			public ReferenceOfProps(SerializedProperty from, FieldInfo fieldInfo)
 			{
 				serializedReferenceProp = from.FindPropertyRelative(nameof(ReferenceOf<object>.serializedReference));
 				unityObjectProp = from.FindPropertyRelative(nameof(ReferenceOf<object>.unityObject));
 				selectedTypeProp = from.FindPropertyRelative(nameof(ReferenceOf<object>.selectedConcreteType));
+				this.fieldInfo = fieldInfo;
+			}
+
+			public bool HasCreateAssetButtonAttribute()
+			{
+				return fieldInfo.GetCustomAttribute<CreateAssetButtonAttribute>() != null;
 			}
 
 			public void SelectNewType(Type type)
@@ -179,9 +196,16 @@ namespace GatOR.Logic.Editor.Editor.Properties
 						EditorGUI.PropertyField(position, serializedReferenceProp, true);
 						break;
 					case ReferenceKind.UnityObject:
-						unityObjectProp.objectReferenceValue = EditorGUI.ObjectField(position, 
-							unityObjectProp.objectReferenceValue, type,
-							unityObjectProp.serializedObject.targetObject);
+						if (typeof(ScriptableObject).IsAssignableFrom(type) && HasCreateAssetButtonAttribute())
+						{
+							CreateAssetButtonDrawer.OnGUIStatic(position, unityObjectProp, null);
+						}
+						else
+						{
+							unityObjectProp.objectReferenceValue = EditorGUI.ObjectField(position,
+								unityObjectProp.objectReferenceValue, type,
+								unityObjectProp.serializedObject.targetObject);
+						}
 						break;
 					case ReferenceKind.Null:
 						// Don't draw anything extra here
