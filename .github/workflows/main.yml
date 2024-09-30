@@ -6,6 +6,7 @@ jobs:
   testAllModes:
     name: Test in ${{ matrix.testMode }}
     runs-on: ubuntu-latest
+    permissions: write-all
     strategy:
       fail-fast: false
       matrix:
@@ -20,6 +21,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           lfs: true
+      - uses: actions/cache@v3
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-
       - uses: game-ci/unity-test-runner@v4
         id: tests
         env:
