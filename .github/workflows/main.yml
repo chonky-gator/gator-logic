@@ -21,10 +21,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           lfs: true
+      - name: Test commands
+        run: ls -la . && ls -la ..
       - uses: actions/cache@v3
         with:
           path: Library
-          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          key: Library-${{ hashFiles('Packages/**') }}
           restore-keys: |
             Library-
       - uses: game-ci/unity-test-runner@v4
