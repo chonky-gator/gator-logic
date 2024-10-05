@@ -3,9 +3,11 @@
 Unity package to help with the development of games and apps. It features interface references on the inspector, a button to create a
 ScriptableObject without the need of `[CreateAssetMenu]` and a Dependency Injection pattern for unity objects.
 
-Note: If enough people require only one of the features, they will be eventually moved to their own 
+Note: If enough people require only one of the features, they will be eventually moved to their own separated package
 
-## ReferenceOf\<T> - Serializing and displaying interface types on the inspector
+## Features
+
+### ReferenceOf\<T> - Serializing and displaying interface types on the inspector
 
 Since we cannot serialize a interface reference by itself and show it on the inspector with `[SerializeField] private IExample example;`,
 this package includes a generic struct `ReferenceOf<T>` that uses Unity's 2020.3 features like generic serialization and polyphormic serialization.
@@ -50,7 +52,7 @@ Alternatively, it will also accept any class that implements that interface and 
 
 Any reference that implements that interface can be assigned through that interface seamlessly. It's really useful when you want to unit test with a mock object.
 
-## [CreateAssetButton] - Easily create new ScriptableObjects when needed
+### [CreateAssetButton] - Easily create new ScriptableObjects when needed
 
 This utility property drawer allows us to add the `[CreateAssetButton]` attribute to a field that references any ScriptableObject, this allows
 us to skip adding `[CreateAssetMenu]` to the ScriptableObject class to avoid dealing with too many assets cluttering the Assets>Create menu and
@@ -62,7 +64,7 @@ creating the assets the moment we need them.
 [CreateAssetButton] public TestSettings settings;
 ```
 
-## IConstructable - Easily create dependency injection with Unity objects
+### IConstructable - Define dependency injection functions with Unity objects
 
 Dependency Injection is a common pattern to help us decouple code and explicitly define dependencies. Normally the DI would be found in the
 constructor, but because Unity objects can't be constructed because they are already instantiated, we have to pass the dependencies to a method
@@ -108,3 +110,17 @@ public class Enemy : MonoBehaviour, IConstructable<IHealth, DifficultySettings>
   }
 }
 ```
+
+## Installation
+
+Inside your unity project go to *Window > Package manager > + > Add from git URL* and add: `com.chonkygator.logic": "https://github.com/chonky-gator/gator-logic.git`
+
+Or modify your `manifest.json` to include this repo URL:
+```json
+{
+  "dependencies": {
+    "com.chonkygator.logic": "https://github.com/chonky-gator/gator-logic.git",
+  }
+}
+```
+
