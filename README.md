@@ -113,7 +113,7 @@ public class Enemy : MonoBehaviour, IConstructable<IHealth, DifficultySettings>
 
 ## Installation
 
-Inside your unity project go to *Window > Package manager > + > Add from git URL* and add: `com.chonkygator.logic": "https://github.com/chonky-gator/gator-logic.git`
+Inside your unity project go to *Window > Package manager > + > Add from git URL* and add: `https://github.com/chonky-gator/gator-logic.git`
 
 Or modify your `manifest.json` to include this repo URL:
 ```json
