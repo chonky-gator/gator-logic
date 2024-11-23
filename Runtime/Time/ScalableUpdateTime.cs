@@ -1,8 +1,8 @@
 using System;
 
-
 namespace GatOR.Logic.Time
 {
+    [Serializable]
     public class ScalableUpdateTime : IUpdateTime, IUpdateNotifier, IDisposable
     {
         private readonly IUpdateNotifier updateNotifier;

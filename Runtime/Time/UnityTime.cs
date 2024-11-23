@@ -2,6 +2,7 @@ using System;
 
 namespace GatOR.Logic.Time
 {
+    [Serializable]
     public class UnityTime : IUpdateTime
     {
         public static UnityTime Instance { get; } = new UnityTime();
@@ -10,6 +11,7 @@ namespace GatOR.Logic.Time
         public TimeSpan DeltaTime => TimeSpan.FromSeconds(UnityEngine.Time.deltaTime);
     }
 
+    [Serializable]
     public class UnscaledUnityTime : IUpdateTime
     {
         public static UnscaledUnityTime Instance { get; } = new UnscaledUnityTime();
@@ -18,6 +20,7 @@ namespace GatOR.Logic.Time
         public TimeSpan DeltaTime => TimeSpan.FromSeconds(UnityEngine.Time.deltaTime);
     }
 
+    [Serializable]
     public class FixedUnityTime : IUpdateTime
     {
         public static FixedUnityTime Instance { get; } = new FixedUnityTime();
@@ -26,6 +29,7 @@ namespace GatOR.Logic.Time
         public TimeSpan DeltaTime => TimeSpan.FromSeconds(UnityEngine.Time.fixedDeltaTime);
     }
 
+    [Serializable]
     public class UnscaledFixedUnityTime : IUpdateTime
     {
         public static UnscaledFixedUnityTime Instance { get; } = new UnscaledFixedUnityTime();

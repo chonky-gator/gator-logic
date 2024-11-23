@@ -17,6 +17,7 @@ namespace GatOR.Logic
         UniTask<TimeSpan> Next(CancellationToken cancellationToken = default);
     }
 
+    [Serializable]
     public class UniTaskUpdate : IUniTaskAsyncEnumerable<TimeSpan>
     {
         public static UniTaskUpdate Update { get; } = new UniTaskUpdate(PlayerLoopTiming.Update,
