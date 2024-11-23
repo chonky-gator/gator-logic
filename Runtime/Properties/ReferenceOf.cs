@@ -89,31 +89,19 @@ namespace GatOR.Logic.Properties
 
         void ISerializationCallbackReceiver.OnAfterDeserialize()
         {
-            try
+            if (serializedReference != null && serializedReference is not Object)
             {
-                if (unityObject != null)
-                {
-                    serializedReference = unityObject as T;
-                    Kind = ReferenceKind.UnityObject;
-                }
-                else if (serializedReference != null)
-                {
-                    unityObject = null;
-                    Kind = ReferenceKind.SerializedReference;
-                }
-                else
-                {
-                    Kind = ReferenceKind.Null;
-                }
+                unityObject = null;
+                Kind = ReferenceKind.SerializedReference;
             }
-            catch (InvalidOperationException e)
+            else if (!ReferenceEquals(unityObject, null))
             {
-                if (!e.Message.StartsWith("EnsureRunningOnMainThread"))
-                {
-                    throw;
-                }
-                
-                // If not, we just ignore it
+                serializedReference = unityObject as T;
+                Kind = ReferenceKind.UnityObject;
+            }
+            else
+            {
+                Kind = ReferenceKind.Null;
             }
         }
     }
