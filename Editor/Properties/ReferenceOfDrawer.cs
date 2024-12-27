@@ -17,6 +17,10 @@ namespace GatOR.Logic.Editor.Editor.Properties
 		
 		private static readonly Dictionary<Type, TypeLookup> InfoForTypes = new();
 		private static readonly GUIContent TypeLabel = new("Type");
+		
+		// Note: This cache is never properly cleaned, is a hackish solution to remember
+		// what concrete UnityEngine.Object we selected
+		private static readonly Dictionary<string, Type> SelectedConcreteTypes = new();
 
 		private static readonly float LineHeight = EditorGUIUtility.singleLineHeight + 2f;
 
@@ -29,7 +33,7 @@ namespace GatOR.Logic.Editor.Editor.Properties
 		public static float GetPropertyHeightStatic(SerializedProperty property, GUIContent label, FieldInfo fieldInfo)
 		{
 			using var props = new ReferenceOfProps(property, fieldInfo);
-			return props.GetHeight();
+			return props.GetHeight(property.propertyPath);
 		}
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -40,6 +44,7 @@ namespace GatOR.Logic.Editor.Editor.Properties
 		public static void OnGUIStatic(Rect position, SerializedProperty property, GUIContent label, FieldInfo fieldInfo)
 		{
 			using var props = new ReferenceOfProps(property, fieldInfo);
+			var propertyPath = property.propertyPath;
 			var expectedType = props.GetExpectedType();
 			var typesLookup = GetOrCreateCacheForType(expectedType);
 			
@@ -52,14 +57,14 @@ namespace GatOR.Logic.Editor.Editor.Properties
 			EditorGUI.indentLevel++;
 			drawingAt.y += EditorGUIUtility.singleLineHeight;
 
-			var previousType = props.GetCurrentType();
+			var previousType = props.GetCurrentType(propertyPath);
 			var previousTypeIndex = typesLookup.GetIndexForType(previousType);
 			int newTypeIndex = EditorGUI.IntPopup(drawingAt, TypeLabel, previousTypeIndex,
 				typesLookup.TypeNames, null);
 			var newType = typesLookup.GetType(newTypeIndex);
 
 			if (newTypeIndex != previousTypeIndex)
-				props.SelectNewType(newType);
+				props.SelectNewType(newType, propertyPath);
 
 			drawingAt.y += LineHeight;
 			props.Draw(drawingAt, newType, GetReferenceKind(newType));
@@ -107,12 +112,10 @@ namespace GatOR.Logic.Editor.Editor.Properties
 				var uniqueNameChecker = new HashSet<string>();
 				foreach (GUIContent name in typeNames)
 				{
-					if (uniqueNameChecker.Contains(name.text))
-					{
-						Debug.LogAssertion($"Name \"{name.text}\" already exists.");
+					if (uniqueNameChecker.Add(name.text))
 						continue;
-					}
-					uniqueNameChecker.Add(name.text);
+					
+					Debug.LogAssertion($"Name \"{name.text}\" already exists.");
 				}
 
 				TypeNames = typeNames;
@@ -138,14 +141,12 @@ namespace GatOR.Logic.Editor.Editor.Properties
 		{
 			private readonly SerializedProperty serializedReferenceProp;
 			private readonly SerializedProperty unityObjectProp;
-			private readonly SerializedProperty selectedTypeProp;
 			private readonly FieldInfo fieldInfo;
 
 			public ReferenceOfProps(SerializedProperty from, FieldInfo fieldInfo)
 			{
 				serializedReferenceProp = from.FindPropertyRelative(nameof(ReferenceOf<object>.serializedReference));
 				unityObjectProp = from.FindPropertyRelative(nameof(ReferenceOf<object>.unityObject));
-				selectedTypeProp = from.FindPropertyRelative(nameof(ReferenceOf<object>.selectedConcreteType));
 				this.fieldInfo = fieldInfo;
 			}
 
@@ -154,33 +155,33 @@ namespace GatOR.Logic.Editor.Editor.Properties
 				return fieldInfo.GetCustomAttribute<CreateAssetButtonAttribute>() != null;
 			}
 
-			public void SelectNewType(Type type)
+			public void SelectNewType(Type type, string propertyPath)
 			{
 				switch (GetReferenceKind(type))
 				{
 					case ReferenceKind.Null:
 						serializedReferenceProp.managedReferenceValue = null;
 						unityObjectProp.objectReferenceValue = null;
-						selectedTypeProp.stringValue = null;
+						SelectedConcreteTypes.Remove(propertyPath);
 						break;
 					case ReferenceKind.SerializedReference:
-						selectedTypeProp.stringValue = null;
 						unityObjectProp.objectReferenceValue = null;
 						serializedReferenceProp.managedReferenceValue = Activator.CreateInstance(type);
+						SelectedConcreteTypes.Remove(propertyPath);
 						break;
 					case ReferenceKind.UnityObject:
-						var newTypeName = EditorUtils.AsFullnameType(type);
-						selectedTypeProp.stringValue = newTypeName;
+						serializedReferenceProp.managedReferenceValue = null;
+						SelectedConcreteTypes[propertyPath] = type;
 						break;
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
 			}
 
-			public float GetHeight()
+			public float GetHeight(string propertyPath)
 			{
 				var height = LineHeight * 2f;
-				var currentType = GetCurrentType();
+				var currentType = GetCurrentType(propertyPath);
 				height += GetReferenceKind(currentType) switch
 				{
 					ReferenceKind.Null => 0f,
@@ -225,9 +226,9 @@ namespace GatOR.Logic.Editor.Editor.Properties
 			/// <summary>Gets the type of the currently assign object.</summary>
 			/// <returns>The type of the object, can be null.</returns>
 			[CanBeNull]
-			public Type GetCurrentType()
+			public Type GetCurrentType(string propertyPath)
 			{
-				var currentType = EditorUtils.GetTypeWithFullName(selectedTypeProp.stringValue);
+				var currentType = SelectedConcreteTypes.GetValueOrDefault(propertyPath);
 				if (currentType != null)
 					return currentType;
 
@@ -244,7 +245,6 @@ namespace GatOR.Logic.Editor.Editor.Properties
 			{
 				serializedReferenceProp.Dispose();
 				unityObjectProp.Dispose();
-				selectedTypeProp.Dispose();
 			}
 		}
 	}

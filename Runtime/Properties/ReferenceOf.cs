@@ -21,12 +21,9 @@ namespace GatOR.Logic.Properties
     {
         [SerializeField] internal Object unityObject;
         [SerializeReference] internal T serializedReference;
-#if UNITY_EDITOR
-        [SerializeField, HideInInspector] internal string selectedConcreteType;
-#endif
 
         /// <summary>
-        /// Are we referencing an unity object, a serialized object or just a null reference.
+        /// Are we referencing a unity object, a serialized object or just a null reference?
         /// </summary>
         public ReferenceKind Kind { get; private set; }
 
@@ -35,9 +32,6 @@ namespace GatOR.Logic.Properties
             Kind = default;
             unityObject = default;
             serializedReference = default;
-#if UNITY_EDITOR
-            selectedConcreteType = default;
-#endif
             Value = reference;
         }
 
