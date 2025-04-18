@@ -1,6 +1,6 @@
 {
   "name": "com.chonkygator.logic",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "displayName": "GatOR Logic",
   "unity": "2020.3",
   "dependencies": {

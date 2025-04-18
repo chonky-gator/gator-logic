@@ -8,15 +8,28 @@ namespace GatOR.Logic.Tests.Utils
     public class UnityObjectMother
     {
         internal static readonly HashSet<Object> instantiatedObjects = new HashSet<Object>();
-
-
+        internal static readonly HashSet<IDisposable> disposables = new HashSet<IDisposable>();
+        
         public static void DestroyInstantiated()
         {
             foreach (Object obj in instantiatedObjects)
                 Object.DestroyImmediate(obj);
             instantiatedObjects.Clear();
+            
+            foreach (var disposable in disposables)
+                disposable.Dispose();
+            disposables.Clear();
         }
 
+        public static void AddToInstantiatedObjects(Object unityObject)
+        {
+            instantiatedObjects.Add(unityObject);
+        }
+
+        public static void AddToDisposables(IDisposable disposable)
+        {
+            disposables.Add(disposable);
+        }
 
         public static GameObject AGameObject() => AGameObject("TEST");
 
